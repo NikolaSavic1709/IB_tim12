@@ -48,26 +48,6 @@ public class TokenUtils {
 
 
     // ============= Funkcije za generisanje JWT tokena =============
-
-    /**
-     * Funkcija za generisanje JWT tokena.
-     *
-     * @param email Email korisnika kojem se token izdaje
-     * @return JWT token
-     */
-    public String generateToken(String email) {
-        return Jwts.builder()
-                .setIssuer(APP_NAME)
-                .setSubject(email)
-                .setAudience(generateAudience())
-                .setIssuedAt(new Date())
-                .setExpiration(generateExpirationDate())
-                .signWith(SIGNATURE_ALGORITHM, SECRET).compact();
-
-
-        // moguce je postavljanje proizvoljnih podataka u telo JWT tokena pozivom funkcije .claim("key", value), npr. .claim("role", user.getRole())
-    }
-
     public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("sub", user.getEmail());
@@ -86,46 +66,12 @@ public class TokenUtils {
 
     }
 
-    /**
-     * Funkcija za utvrđivanje tipa uređaja za koji se JWT kreira.
-     * @return Tip uređaja.
-     */
-    private String generateAudience() {
 
-        //	Moze se iskoristiti org.springframework.mobile.device.Device objekat za odredjivanje tipa uredjaja sa kojeg je zahtev stigao.
-        //	https://spring.io/projects/spring-mobile
-
-        //	String audience = AUDIENCE_UNKNOWN;
-        //		if (device.isNormal()) {
-        //			audience = AUDIENCE_WEB;
-        //		} else if (device.isTablet()) {
-        //			audience = AUDIENCE_TABLET;
-        //		} else if (device.isMobile()) {
-        //			audience = AUDIENCE_MOBILE;
-        //		}
-
-        return AUDIENCE_WEB;
-    }
-
-    /**
-     * Funkcija generiše datum do kog je JWT token validan.
-     *
-     * @return Datum do kojeg je JWT validan.
-     */
     private Date generateExpirationDate() {
         return new Date(new Date().getTime() + EXPIRES_IN);
     }
 
-    // =================================================================
 
-    // ============= Funkcije za citanje informacija iz JWT tokena =============
-
-    /**
-     * Funkcija za preuzimanje JWT tokena iz zahteva.
-     *
-     * @param request HTTP zahtev koji klijent šalje.
-     * @return JWT token ili null ukoliko se token ne nalazi u odgovarajućem zaglavlju HTTP zahteva.
-     */
     public String getToken(HttpServletRequest request) {
         String authHeader = getAuthHeaderFromHeader(request);
 
