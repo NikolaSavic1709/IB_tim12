@@ -102,7 +102,7 @@ public class CertificateService extends JPAService<Certificate> implements ICert
             ContentSigner contentSigner = signerBuilder.build(keyPairSubject.getPrivate());
 
             Certificate issuerCert =  certificateRepository.findBySerialNumber(certificateRequest.getIssuer());
-            
+
             User issuer = userService.findByEmail(issuerCert.getEmail());
             X500NameBuilder builderIssuer = generateX500Name(issuer);
             builderIssuer.addRDN(BCStyle.UID, issuerCert.getSerialNumber());
