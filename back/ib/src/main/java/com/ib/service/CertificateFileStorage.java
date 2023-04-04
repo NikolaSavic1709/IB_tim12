@@ -24,4 +24,29 @@ public class CertificateFileStorage {
         certificateFile.close();
     }
 
+    public X509Certificate getCertificateFromStorage(String serialNumber){
+        try{
+            CertificateFactory fac = CertificateFactory.getInstance("X509");
+            FileInputStream is = new FileInputStream("\\path\\to\\file\\"+serialNumber+".crt");
+            return (X509Certificate) fac.generateCertificate(is);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (CertificateException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+    public PrivateKey getPrivateKeyFromStorage(String serialNumber){
+        try{
+            CertificateFactory fac = CertificateFactory.getInstance("X509");
+            FileInputStream is = new FileInputStream("\\path\\to\\file\\"+serialNumber+".key");
+            return (PrivateKey) fac.generateCertificate(is);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (CertificateException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
 }
