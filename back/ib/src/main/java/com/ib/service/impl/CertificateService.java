@@ -38,6 +38,7 @@ public class CertificateService extends JPAService<Certificate> implements ICert
     }
     private boolean isDigitalSignatureValid(Certificate certificate){
         //konverzija u java certificate
+        //citanje iz fajla
         //cert.verify(keyPairIssuer.getPublic());
         return true;
     }
@@ -53,7 +54,7 @@ public class CertificateService extends JPAService<Certificate> implements ICert
     }
     private boolean isCertificateRevoked(Certificate certificate){
         // ova metoda se ne mora koristiti ako ce svaki put kada se povuce ili ponovo objavi sertifikat promeni fleg u bazi
-        return true;
+        return certificate.getStatus()==CertificateStatus.INVALID;
     }
     private boolean isCertificateOutdated(Certificate certificate){
         return certificate.getStartDate().isAfter(LocalDateTime.now()) || certificate.getEndDate().isBefore(LocalDateTime.now());
