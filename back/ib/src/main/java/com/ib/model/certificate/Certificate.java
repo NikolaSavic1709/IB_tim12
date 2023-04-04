@@ -46,4 +46,13 @@ public class Certificate {
 
     @Column(name = "email")
     private String email;
+
+    public Certificate(String serialNumber, String signatureAlgorithm, String issuer, CertificateStatus status, CertificateType type, String email) {
+        this.serialNumber = serialNumber;
+        this.signatureAlgorithm = signatureAlgorithm;
+        this.issuer = issuer;
+        this.status = status;
+        this.type = type;
+        this.email = email;
+    }
 }
