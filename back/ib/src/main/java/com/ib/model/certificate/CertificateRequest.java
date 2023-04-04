@@ -27,4 +27,10 @@ public class CertificateRequest {
 
     @Column(name = "reject_reason")
     private String rejectionReason;
+
+    public CertificateRequest(Certificate certificate) {
+        this.certificate = certificate;
+        this.status = RequestStatus.PENDING;
+        this.rejectionReason = null;
+    }
 }

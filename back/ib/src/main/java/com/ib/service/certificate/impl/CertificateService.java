@@ -1,9 +1,8 @@
 package com.ib.service.certificate.impl;
 
+import com.ib.DTO.RequestCreationDTO;
 import com.ib.model.certificate.Certificate;
-import com.ib.model.certificate.CertificateRequest;
 import com.ib.model.certificate.CertificateStatus;
-import com.ib.model.certificate.RequestStatus;
 import com.ib.model.users.User;
 import com.ib.repository.certificate.ICertificateRepository;
 import com.ib.service.CertificateFileStorage;
@@ -57,6 +56,12 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         return certificateRepository;
     }
 
+    @Override
+    public Certificate getBySerialNumber(String serialNumber) throws EntityNotFoundException{
+        Optional<Certificate> certificate= Optional.ofNullable(certificateRepository.findBySerialNumber(serialNumber));
+        if(certificate.isEmpty()) throw new EntityNotFoundException();
+        else return certificate.get();
+    }
     @Override
     public boolean getAndCheck(String serialNumber) throws EntityNotFoundException{
         Optional<Certificate> certificate= Optional.ofNullable(certificateRepository.findBySerialNumber(serialNumber));
@@ -128,7 +133,9 @@ public class CertificateService extends JPAService<Certificate> implements ICert
 
             User subject = userService.findByEmail(certificateRequest.getEmail());
             X500NameBuilder builderSubject = generateX500Name(subject);
-            String sn = generateSerialNumber();
+
+            //String sn = generateSerialNumber();
+            String sn = certificateRequest.getSerialNumber();
             builderSubject.addRDN(BCStyle.UID, sn);
 
             X509v3CertificateBuilder certGen = new JcaX509v3CertificateBuilder(
@@ -155,6 +162,19 @@ public class CertificateService extends JPAService<Certificate> implements ICert
             throw new RuntimeException(e);
         }
         return null;
+    }
+
+    @Override
+    public Certificate createCertificateMetadata(RequestCreationDTO requestCreation){
+        Certificate certificateMetaData = new Certificate(
+                generateSerialNumber(),
+                requestCreation.getSignatureAlgorithm(),
+                requestCreation.getIssuer(),
+                CertificateStatus.INVALID,
+                requestCreation.getType(),
+                requestCreation.getEmail()
+        );
+        return save(certificateMetaData);
     }
 
     private static KeyPair generateKeyPair() {
