@@ -1,5 +1,6 @@
 package com.ib.model.users;
 
+import com.ib.model.dto.request.RegistrationRequest;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -10,12 +11,22 @@ import lombok.Setter;
 
 
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @Entity
 public class EndUser extends User{
 
-    @Column(name="is_enabled")
-    private boolean isEnabled;
+
+
+    public EndUser(RegistrationRequest registrationRequest) {
+        this.setName(registrationRequest.getName());
+        this.setSurname(registrationRequest.getSurname());
+        this.setEmail(registrationRequest.getEmail());
+        this.setTelephoneNumber(registrationRequest.getTelephoneNumber());
+        this.setPassword(registrationRequest.getPassword());
+    }
+
+    public EndUser(Integer id, String email, String name, String surname, String telephoneNumber, String password, Authority authority, boolean isEnabled) {
+        super(id, email, name, surname, telephoneNumber, password, authority, isEnabled);
+    }
 }

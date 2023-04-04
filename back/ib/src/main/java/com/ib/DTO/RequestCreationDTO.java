@@ -1,4 +1,4 @@
-package com.ib.dto.certificate;
+package com.ib.DTO;
 
 import com.ib.model.certificate.CertificateStatus;
 import com.ib.model.certificate.CertificateType;

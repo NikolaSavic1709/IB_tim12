@@ -1,8 +1,9 @@
 package com.ib.controller.certificate;
 
-import com.ib.dto.certificate.RequestCreationDTO;
+import com.ib.DTO.RequestCreationDTO;
+import com.ib.exception.InvalidUserException;
+import com.ib.model.certificate.Certificate;
 import com.ib.model.certificate.CertificateRequest;
-import com.ib.model.users.User;
 import com.ib.service.certificate.interfaces.ICertificateRequestService;
 import com.ib.service.users.interfaces.IUserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -33,16 +34,16 @@ public class CertificateRequestController {
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAllRequests(@PathVariable Integer userId, @RequestHeader("Authorization") String authHeader)
     {
-//        String token = authHeader.substring(7);
-//        if (!jwtUtil.extractId(token).equals(userId.toString()))
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Request does not exist!");
+
 
         try {
-            List<CertificateRequest> requests = requestService.getRequests(userId);
+            List<CertificateRequest> requests = requestService.getRequests(userId, authHeader);
 
             return new ResponseEntity<>(requests, HttpStatus.OK);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body( "User does not exist!");
+        } catch (InvalidUserException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid user");
         }
     }
 
@@ -51,7 +52,7 @@ public class CertificateRequestController {
     {
         try {
 
-            return new ResponseEntity<>(tokenDTO, HttpStatus.OK);
+            return new ResponseEntity<>(new Certificate(), HttpStatus.OK);
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Wrong data");
         }
