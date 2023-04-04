@@ -176,21 +176,9 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         return sn.append(UUID.randomUUID().toString()).append(UUID.randomUUID().toString()).toString();
     }
 
-    public Certificate acceptRequest(CertificateRequest certificateRequest) {
-        Certificate newCertificate = certificateRequest.getCertificate();
-        X509Certificate certificate = generateCertificate(newCertificate);
-        if (certificate != null) {
-            newCertificate.setStatus(CertificateStatus.VALID);
-            save(newCertificate);
-            certificateRequest.setStatus(RequestStatus.ACCEPTED);
-            certificateRequestService.save(certificateRequest);
-            return newCertificate;
-        }
-        return null;
-    }
-
-    public void rejectRequest(String serialNumber, String rejectionReason) {
-
+    public String getOwnerOfCertificate(String serialNumber) {
+        Certificate cert = certificateRepository.findBySerialNumber(serialNumber);
+        return cert.getEmail();
     }
 
 }

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,6 +57,21 @@ public class CertificateRequestController {
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Wrong data");
         }
+    }
+
+
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'END_USER')")
+    @PutMapping(value = "/accept")
+    public ResponseEntity<?> acceptRequest(@RequestBody CertificateRequest certificateRequest,  @RequestHeader("Authorization") String token) {
+        Certificate created = requestService.acceptRequest(certificateRequest, token);
+        return new ResponseEntity<>(created, HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'END_USER')")
+    @PutMapping(value = "/reject/{id}") // id of certificate request
+    public ResponseEntity<?> rejectRequest(@RequestBody String rejectionReason, @PathVariable Integer id, @RequestHeader("Authorization") String token) {
+        requestService.rejectRequest(id, rejectionReason, token);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 }

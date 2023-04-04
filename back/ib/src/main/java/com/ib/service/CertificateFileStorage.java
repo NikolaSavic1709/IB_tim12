@@ -2,13 +2,9 @@ package com.ib.service;
 
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.security.PrivateKey;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
+import java.security.cert.*;
 
 @Service
 public class CertificateFileStorage {
@@ -21,10 +17,11 @@ public class CertificateFileStorage {
     }
 
     public void exportCertificate(X509Certificate certificate) throws IOException, CertificateEncodingException {
-        File file = new File("/certificates/" + certificate.getSerialNumber() + ".key");
+        File file = new File("/certificates/" + certificate.getSerialNumber() + ".crt");
         FileOutputStream certificateFile = new FileOutputStream(file);
         certificateFile.write(certificate.getEncoded());
         certificateFile.write(certificate.getPublicKey().getEncoded());
         certificateFile.close();
     }
+
 }

@@ -9,6 +9,6 @@ public interface ICertificateService extends IJPAService<Certificate> {
     boolean getAndCheck(String id);
     X509Certificate generateCertificate(Certificate certificate);
 
-    Certificate acceptRequest(CertificateRequest certificateRequest);
-    void rejectRequest(String serialNumber, String rejectionRequest);
-}
+    String getOwnerOfCertificate(String serialNumber);
+
+    }
