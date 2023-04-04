@@ -10,4 +10,5 @@ public interface ICertificateService extends IJPAService<Certificate>{
     X509Certificate generateCertificate(Certificate certificate);
 
     Certificate acceptRequest(CertificateRequest certificateRequest);
+    void rejectRequest(String serialNumber, String rejectionRequest);
 }

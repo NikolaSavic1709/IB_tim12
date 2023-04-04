@@ -186,7 +186,7 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         return null;
     }
 
-    public void rejectRequest(CertificateRequest certificateRequest) {
+    public void rejectRequest(String serialNumber, String rejectionReason) {
 
     }
 

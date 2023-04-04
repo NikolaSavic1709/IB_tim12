@@ -52,7 +52,8 @@ public class CertificateController {
 
     @PreAuthorize("hasAnyAuthority('ADMIN', 'END_USER')")
     @PutMapping(value = "/reject/{serialNumber}")
-    public ResponseEntity<?> rejectRequest(@RequestBody String rejectionReason) {
-        return null;
+    public ResponseEntity<?> rejectRequest(@RequestBody String rejectionReason, @PathVariable String serialNumber) {
+        certificateService.rejectRequest(serialNumber, rejectionReason);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
