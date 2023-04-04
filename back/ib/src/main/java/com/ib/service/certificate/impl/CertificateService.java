@@ -1,4 +1,4 @@
-package com.ib.service.impl;
+package com.ib.service.certificate.impl;
 
 import com.ib.model.certificate.Certificate;
 import com.ib.model.certificate.CertificateRequest;
@@ -8,7 +8,8 @@ import com.ib.model.users.User;
 import com.ib.repository.certificate.ICertificateRepository;
 import com.ib.service.CertificateFileStorage;
 import com.ib.service.UserService;
-import com.ib.service.interfaces.ICertificateService;
+import com.ib.service.base.impl.JPAService;
+import com.ib.service.certificate.interfaces.ICertificateService;
 import jakarta.persistence.EntityNotFoundException;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -24,7 +25,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,8 +36,6 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-
-import javax.swing.plaf.ViewportUI;
 
 @Service
 public class CertificateService extends JPAService<Certificate> implements ICertificateService {
@@ -106,11 +104,16 @@ public class CertificateService extends JPAService<Certificate> implements ICert
             //TODO: get issuer private key from key folders
             ContentSigner contentSigner = signerBuilder.build(keyPairSubject.getPrivate());
 
-            Certificate issuerCert =  certificateRepository.findBySerialNumber(certificateRequest.getIssuer());
+            X500Name issuerX500Name = null;
+            if (certificateRequest.getIssuer()!=null){
+                Certificate issuerCert =  certificateRepository.findBySerialNumber(certificateRequest.getIssuer());
 
-            User issuer = userService.findByEmail(issuerCert.getEmail());
-            X500NameBuilder builderIssuer = generateX500Name(issuer);
-            builderIssuer.addRDN(BCStyle.UID, issuerCert.getSerialNumber());
+                User issuer = userService.findByEmail(issuerCert.getEmail());
+                X500NameBuilder builderIssuer = generateX500Name(issuer);
+                builderIssuer.addRDN(BCStyle.UID, issuerCert.getSerialNumber());
+
+                issuerX500Name = builderIssuer.build();
+            }
 
             User subject = userService.findByEmail(certificateRequest.getEmail());
             X500NameBuilder builderSubject = generateX500Name(subject);
@@ -118,7 +121,7 @@ public class CertificateService extends JPAService<Certificate> implements ICert
             builderSubject.addRDN(BCStyle.UID, sn);
 
             X509v3CertificateBuilder certGen = new JcaX509v3CertificateBuilder(
-                    builderIssuer.build(),
+                    issuerX500Name,
                     new BigInteger(sn),
                     certificateRequest.getStartDate(),
                     certificateRequest.getEndDate(),

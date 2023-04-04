@@ -5,7 +5,7 @@ import com.ib.DTO.CertificateDTO;
 import com.ib.DTO.ObjectListResponseDTO;
 import com.ib.model.certificate.Certificate;
 import com.ib.model.certificate.CertificateRequest;
-import com.ib.service.interfaces.ICertificateService;
+import com.ib.service.certificate.interfaces.ICertificateService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
