@@ -23,10 +23,12 @@ public class CertificateService extends JPAService<Certificate> implements ICert
     }
 
     @Override
-    public boolean isValid(String serialNumber) throws EntityNotFoundException{
-        Optional<Certificate> certificateOptional= Optional.ofNullable(certificateRepository.findBySerialNumber(serialNumber));
-        if(certificateOptional.isEmpty()) throw new EntityNotFoundException();
-        Certificate certificate=certificateOptional.get();
+    public boolean getAndCheck(String serialNumber) throws EntityNotFoundException{
+        Optional<Certificate> certificate= Optional.ofNullable(certificateRepository.findBySerialNumber(serialNumber));
+        if(certificate.isEmpty()) throw new EntityNotFoundException();
+        return isValid(certificate.get());
+    }
+    private boolean isValid(Certificate certificate){
         if(!isDigitalSignatureValid(certificate) || !isTrustedAuthority(certificate) || isCertificateRevoked(certificate) || isCertificateOutdated(certificate)) {
             certificate.setStatus(CertificateStatus.INVALID);
             return false;
@@ -35,9 +37,18 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         return true;
     }
     private boolean isDigitalSignatureValid(Certificate certificate){
+        //konverzija u java certificate
+        //cert.verify(keyPairIssuer.getPublic());
         return true;
     }
     private boolean isTrustedAuthority(Certificate certificate){
+        //konverzija u java certificate
+        // uzima se roditelj sertifikata
+        // cert.getIssuer.getID po njemu se uzima sertifikat iz keystore-a
+        // zove se isValid za njega
+        // ako je roditelj null to je to
+        //if(roditelj==null || isValid(roditelj)) return true;
+        // return false;
         return true;
     }
     private boolean isCertificateRevoked(Certificate certificate){

@@ -35,7 +35,7 @@ public class CertificateController {
         ObjectListResponseDTO<CertificateDTO> objectListResponse = new ObjectListResponseDTO<>(certificateDTOs.size(), certificateDTOs);
         try {
             boolean isValid = certificateService.isValid(serialNumber);
-            return new ResponseEntity<>(true, HttpStatus.OK);
+            return new ResponseEntity<>(isValid, HttpStatus.OK);
         }
         catch (EntityNotFoundException e)
         {
