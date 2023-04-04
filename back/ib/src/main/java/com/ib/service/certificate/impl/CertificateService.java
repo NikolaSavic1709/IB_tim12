@@ -7,9 +7,9 @@ import com.ib.model.certificate.RequestStatus;
 import com.ib.model.users.User;
 import com.ib.repository.certificate.ICertificateRepository;
 import com.ib.service.CertificateFileStorage;
-import com.ib.service.UserService;
 import com.ib.service.base.impl.JPAService;
 import com.ib.service.certificate.interfaces.ICertificateService;
+import com.ib.service.users.impl.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -42,9 +42,6 @@ public class CertificateService extends JPAService<Certificate> implements ICert
 
     @Autowired
     private ICertificateRepository certificateRepository;
-
-    @Autowired
-    private CertificateRequestService certificateRequestService;
 
     @Autowired
     private UserService userService;

@@ -2,7 +2,7 @@ package com.ib.config;
 
 import com.ib.authentication.RestAuthenticationEntryPoint;
 import com.ib.authentication.TokenAuthenticationFilter;
-import com.ib.service.UserService;
+import com.ib.service.users.impl.UserService;
 import com.ib.utils.TokenUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
