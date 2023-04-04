@@ -1,7 +1,9 @@
 package com.ib.service.impl;
 
 import com.ib.model.certificate.Certificate;
+import com.ib.model.certificate.CertificateRequest;
 import com.ib.model.certificate.CertificateStatus;
+import com.ib.model.certificate.RequestStatus;
 import com.ib.model.users.User;
 import com.ib.repository.certificate.ICertificateRepository;
 import com.ib.service.CertificateFileStorage;
@@ -42,6 +44,9 @@ public class CertificateService extends JPAService<Certificate> implements ICert
 
     @Autowired
     private ICertificateRepository certificateRepository;
+
+    @Autowired
+    private CertificateRequestService certificateRequestService;
 
     @Autowired
     private UserService userService;
@@ -92,7 +97,7 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         return certificate.getStartDate().after(Date.from(now.atZone(ZoneId.systemDefault()).toInstant())) || certificate.getEndDate().before(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()));
     }
 
-    private X509Certificate generateCertificate(Certificate certificateRequest) {
+    public X509Certificate generateCertificate(Certificate certificateRequest) {
         try {
             JcaContentSignerBuilder signerBuilder = new JcaContentSignerBuilder("SHA256WithRSAEncryption");
 
@@ -166,6 +171,23 @@ public class CertificateService extends JPAService<Certificate> implements ICert
     private static String generateSerialNumber() {
         StringBuilder sn = new StringBuilder();
         return sn.append(UUID.randomUUID().toString()).append(UUID.randomUUID().toString()).toString();
+    }
+
+    public Certificate acceptRequest(CertificateRequest certificateRequest) {
+        Certificate newCertificate = certificateRequest.getCertificate();
+        X509Certificate certificate = generateCertificate(newCertificate);
+        if (certificate != null) {
+            newCertificate.setStatus(CertificateStatus.VALID);
+            save(newCertificate);
+            certificateRequest.setStatus(RequestStatus.ACCEPTED);
+            certificateRequestService.save(certificateRequest);
+            return newCertificate;
+        }
+        return null;
+    }
+
+    public void rejectRequest(CertificateRequest certificateRequest) {
+
     }
 
 }

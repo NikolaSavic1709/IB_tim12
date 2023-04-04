@@ -4,12 +4,14 @@ package com.ib.controller;
 import com.ib.DTO.CertificateDTO;
 import com.ib.DTO.ObjectListResponseDTO;
 import com.ib.model.certificate.Certificate;
+import com.ib.model.certificate.CertificateRequest;
 import com.ib.service.interfaces.ICertificateService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,5 +41,18 @@ public class CertificateController {
         {
             return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.NOT_FOUND);
         }
+    }
+
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'END_USER')")
+    @PutMapping(value = "/accept")
+    public ResponseEntity<?> acceptRequest(@RequestBody CertificateRequest certificateRequest) {
+        Certificate created = certificateService.acceptRequest(certificateRequest);
+        return new ResponseEntity<>(created, HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'END_USER')")
+    @PutMapping(value = "/reject/{serialNumber}")
+    public ResponseEntity<?> rejectRequest(@RequestBody String rejectionReason) {
+        return null;
     }
 }
