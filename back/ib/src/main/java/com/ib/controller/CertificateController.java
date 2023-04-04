@@ -22,19 +22,17 @@ public class CertificateController {
     @Autowired
     private ICertificateService certificateService;
     @GetMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getAllEmployees() {
+    public ResponseEntity<?> getAllCertificates() {
 
         List<CertificateDTO> certificateDTOs = certificateService.getAll().parallelStream().map(CertificateDTO::new).collect(Collectors.toList());
         ObjectListResponseDTO<CertificateDTO> objectListResponse = new ObjectListResponseDTO<>(certificateDTOs.size(), certificateDTOs);
         return new ResponseEntity<>(objectListResponse,HttpStatus.OK);
     }
     @GetMapping(value = "/validity/{serialNumber}")
-    public ResponseEntity<?> getAllEmployees(@PathVariable String serialNumber) {
+    public ResponseEntity<?> validateCertificate(@PathVariable String serialNumber) {
 
-        List<CertificateDTO> certificateDTOs = certificateService.getAll().parallelStream().map(CertificateDTO::new).collect(Collectors.toList());
-        ObjectListResponseDTO<CertificateDTO> objectListResponse = new ObjectListResponseDTO<>(certificateDTOs.size(), certificateDTOs);
         try {
-            boolean isValid = certificateService.isValid(serialNumber);
+            boolean isValid = certificateService.getAndCheck(serialNumber);
             return new ResponseEntity<>(isValid, HttpStatus.OK);
         }
         catch (EntityNotFoundException e)
