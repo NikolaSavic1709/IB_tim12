@@ -23,7 +23,7 @@ public class UserActivation {
     private User user;
 
     @Column(name = "token", nullable = false)
-    private Integer token;
+    private String token;
 
     @Column(name = "creation_date", nullable = false)
     private LocalDateTime creationDate;
@@ -31,7 +31,7 @@ public class UserActivation {
     @Column(name = "expiry_date", nullable = false)
     private LocalDateTime expiryDate;
 
-    public UserActivation(User user, LocalDateTime creationDate, LocalDateTime expiryDate, Integer token) {
+    public UserActivation(User user, LocalDateTime creationDate, LocalDateTime expiryDate, String token) {
         this.user = user;
         this.creationDate = creationDate;
         this.expiryDate = expiryDate;

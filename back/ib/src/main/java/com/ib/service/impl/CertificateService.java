@@ -3,12 +3,14 @@ package com.ib.service.impl;
 import com.ib.model.certificate.Certificate;
 import com.ib.model.certificate.CertificateStatus;
 import com.ib.repository.certificate.ICertificateRepository;
-import com.ib.service.interfaces.ICertificateService;
+import com.ib.service.base.impl.JPAService;
+import com.ib.service.certificate.interfaces.ICertificateService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
+import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -28,6 +30,17 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         if(certificate.isEmpty()) throw new EntityNotFoundException();
         return isValid(certificate.get());
     }
+
+    @Override
+    public X509Certificate generateCertificate(Certificate certificate) {
+        return null;
+    }
+
+    @Override
+    public String getOwnerOfCertificate(String serialNumber) {
+        return null;
+    }
+
     private boolean isValid(Certificate certificate){
         if(!isDigitalSignatureValid(certificate) || !isTrustedAuthority(certificate) || isCertificateRevoked(certificate) || isCertificateOutdated(certificate)) {
             certificate.setStatus(CertificateStatus.INVALID);

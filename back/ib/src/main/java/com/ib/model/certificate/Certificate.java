@@ -1,12 +1,15 @@
 package com.ib.model.certificate;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,10 +22,6 @@ public class Certificate {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-//    StringBuilder sn = new StringBuilder();
-//    return sn.append(UUID.randomUUID().toString())
-//    .append(UUID.randomUUID().toString()).toString();
-
     @Column(name = "serial_number", nullable = false)
     private String serialNumber;
 
@@ -33,10 +32,11 @@ public class Certificate {
     private String issuer;
 
     @Column(name = "valid_from", nullable = false)
-    private LocalDateTime startDate;
+    @JsonFormat(pattern= "dd-MM-yyyy")
+    private Date startDate;
 
     @Column(name = "valid_to", nullable = false)
-    private LocalDateTime endDate;
+    private Date endDate;
 
     @Column(name = "status", nullable = false)
     private CertificateStatus status;

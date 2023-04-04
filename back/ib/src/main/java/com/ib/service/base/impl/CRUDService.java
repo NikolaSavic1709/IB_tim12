@@ -1,8 +1,7 @@
-package com.ib.service.impl;
+package com.ib.service.base.impl;
 
-import com.ib.service.interfaces.ICRUDService;
+import com.ib.service.base.interfaces.ICRUDService;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

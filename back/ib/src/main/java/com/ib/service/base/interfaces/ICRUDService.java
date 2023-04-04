@@ -1,4 +1,4 @@
-package com.ib.service.interfaces;
+package com.ib.service.base.interfaces;
 
 import java.util.List;
 

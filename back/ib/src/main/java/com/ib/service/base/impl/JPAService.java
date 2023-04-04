@@ -1,6 +1,6 @@
-package com.ib.service.impl;
+package com.ib.service.base.impl;
 
-import com.ib.service.interfaces.IJPAService;
+import com.ib.service.base.interfaces.IJPAService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
