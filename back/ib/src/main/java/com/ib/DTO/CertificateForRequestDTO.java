@@ -34,8 +34,8 @@ public class CertificateForRequestDTO {
         this.requestStatus = request.getStatus();
         this.rejectionReason = request.getRejectionReason();
         this.serialNumber = request.getCertificate().getSerialNumber();
-        this.signatureAlgorithm = request.getCertificate().getSerialNumber();
-        this.issuer = request.getCertificate().getSerialNumber();
+        this.signatureAlgorithm = request.getCertificate().getSignatureAlgorithm();
+        this.issuer = request.getCertificate().getIssuer();
         this.startDate = request.getCertificate().getStartDate();
         this.endDate = request.getCertificate().getEndDate();
         this.certificateStatus = request.getCertificate().getStatus();

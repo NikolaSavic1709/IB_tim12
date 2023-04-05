@@ -28,14 +28,15 @@ public class Certificate {
     @Column(name = "signature_algorithm")
     private String signatureAlgorithm;
 
-    @Column(name = "issuer", nullable = false)
+    @Column(name = "issuer")
     private String issuer;
 
-    @Column(name = "valid_from", nullable = false)
+    @Column(name = "valid_from")
     @JsonFormat(pattern= "dd-MM-yyyy")
     private Date startDate;
 
-    @Column(name = "valid_to", nullable = false)
+    @Column(name = "valid_to")
+    @JsonFormat(pattern= "dd-MM-yyyy")
     private Date endDate;
 
     @Column(name = "status", nullable = false)

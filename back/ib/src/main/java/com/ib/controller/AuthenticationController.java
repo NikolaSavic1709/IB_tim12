@@ -50,7 +50,7 @@ public class AuthenticationController {
     }
 
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RegistrationRequest> register(@Valid @RequestBody RegistrationRequest registrationRequest) {
+    public ResponseEntity<RegistrationRequest> register( @RequestBody RegistrationRequest registrationRequest) {
         EndUser newUser = new EndUser(registrationRequest);
         endUserService.register(newUser);
         return new ResponseEntity<>(new RegistrationRequest(newUser), HttpStatus.OK);

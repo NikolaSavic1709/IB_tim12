@@ -15,6 +15,6 @@ public interface ICertificateRequestService {
     List<CertificateRequest> getRequests(Integer userId, String authHeader) throws EntityNotFoundException, InvalidUserException;
 
     CertificateRequest createRequest(RequestCreationDTO requestCreation, String authHeader) throws EntityNotFoundException, ForbiddenException, CertificateCreationException;
-    Certificate acceptRequest(CertificateRequest certificateRequest, String token);
+    Certificate acceptRequest(CertificateRequest certificateRequest, String token) throws ForbiddenException;
     void rejectRequest(Integer id, String rejectionRequest, String token);
 }

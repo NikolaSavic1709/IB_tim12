@@ -1,8 +1,10 @@
 package com.ib.service.certificate.impl;
 
 import com.ib.DTO.RequestCreationDTO;
+import com.ib.exception.ForbiddenException;
 import com.ib.model.certificate.Certificate;
 import com.ib.model.certificate.CertificateStatus;
+import com.ib.model.certificate.CertificateType;
 import com.ib.model.users.User;
 import com.ib.repository.certificate.ICertificateRepository;
 import com.ib.service.CertificateFileStorage;
@@ -14,6 +16,7 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
@@ -70,7 +73,6 @@ public class CertificateService extends JPAService<Certificate> implements ICert
     }
     private boolean isValid(Certificate certificate){
         if(!isDigitalSignatureValid(certificate) || !isTrustedAuthority(certificate) || isCertificateRevoked(certificate) || isCertificateOutdated(certificate)) {
-            certificate.setStatus(CertificateStatus.INVALID);
             return false;
         }
         certificate.setStatus(CertificateStatus.VALID);
@@ -83,20 +85,12 @@ public class CertificateService extends JPAService<Certificate> implements ICert
 
             cert.verify(issuerCert.getPublicKey());
             return true;
-        } catch (CertificateException e) {
-            throw new RuntimeException(e);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        } catch (SignatureException e) {
-            throw new RuntimeException(e);
-        } catch (InvalidKeyException e) {
+        } catch (InvalidKeyException | CertificateException | NoSuchAlgorithmException | SignatureException | NoSuchProviderException e) {
             return false;
-        } catch (NoSuchProviderException e) {
-            throw new RuntimeException(e);
         }
     }
     private boolean isTrustedAuthority(Certificate certificate){
-        if(certificate.getIssuer()==null || isValid(certificateRepository.findBySerialNumber(certificate.getIssuer())))
+        if(certificate.getType().equals(CertificateType.ROOT) || isValid(certificateRepository.findBySerialNumber(certificate.getIssuer())))
             return true;
         return false;
 
@@ -110,19 +104,23 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         return certificate.getStartDate().after(Date.from(now.atZone(ZoneId.systemDefault()).toInstant())) || certificate.getEndDate().before(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()));
     }
 
-    public X509Certificate generateCertificate(Certificate certificateRequest) {
+    public X509Certificate generateCertificate(Certificate certificateRequest) throws ForbiddenException{
         try {
             JcaContentSignerBuilder signerBuilder = new JcaContentSignerBuilder("SHA256WithRSAEncryption");
 
             signerBuilder = signerBuilder.setProvider("BC");
             KeyPair keyPairSubject = generateKeyPair();
 
-            PrivateKey issuerPrivateKey=certificateFileStorage.getPrivateKeyFromStorage(certificateRequest.getIssuer());
-            ContentSigner contentSigner = signerBuilder.build(issuerPrivateKey);
+            ContentSigner contentSigner;
 
             X500Name issuerX500Name = null;
             if (certificateRequest.getIssuer()!=null){
+                PrivateKey issuerPrivateKey=certificateFileStorage.getPrivateKeyFromStorage(certificateRequest.getIssuer());
+                contentSigner = signerBuilder.build(issuerPrivateKey);
+
                 Certificate issuerCert =  certificateRepository.findBySerialNumber(certificateRequest.getIssuer());
+                if (issuerCert.getType().equals(CertificateType.END))
+                    throw new ForbiddenException("End certificate can't be issuer");
 
                 User issuer = userService.findByEmail(issuerCert.getEmail());
                 X500NameBuilder builderIssuer = generateX500Name(issuer);
@@ -130,13 +128,25 @@ public class CertificateService extends JPAService<Certificate> implements ICert
 
                 issuerX500Name = builderIssuer.build();
             }
+            else{
+//                PrivateKey issuerPrivateKey=certificateFileStorage.getPrivateKeyFromStorage(certificateRequest.getIssuer());
+                contentSigner = signerBuilder.build(keyPairSubject.getPrivate());
 
+                User issuer = userService.findByEmail(certificateRequest.getEmail());
+                X500NameBuilder builderIssuer = generateX500Name(issuer);
+                builderIssuer.addRDN(BCStyle.UID, certificateRequest.getSerialNumber());
+                issuerX500Name = builderIssuer.build();
+            }
             User subject = userService.findByEmail(certificateRequest.getEmail());
             X500NameBuilder builderSubject = generateX500Name(subject);
 
-            //String sn = generateSerialNumber();
+
             String sn = certificateRequest.getSerialNumber();
             builderSubject.addRDN(BCStyle.UID, sn);
+
+            LocalDateTime now=LocalDateTime.now();
+            certificateRequest.setStartDate(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()));
+            certificateRequest.setEndDate(Date.from(now.plusYears(10).atZone(ZoneId.systemDefault()).toInstant()));
 
             X509v3CertificateBuilder certGen = new JcaX509v3CertificateBuilder(
                     issuerX500Name,
@@ -181,7 +191,7 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         try {
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
             SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
-            keyGen.initialize(2048, random);
+            keyGen.initialize(1024, random);
             return keyGen.generateKeyPair();
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
@@ -204,7 +214,7 @@ public class CertificateService extends JPAService<Certificate> implements ICert
 
     private static String generateSerialNumber() {
         StringBuilder sn = new StringBuilder();
-        return sn.append(UUID.randomUUID().toString()).append(UUID.randomUUID().toString()).toString();
+        return new BigInteger(sn.append(UUID.randomUUID()).append(UUID.randomUUID()).toString().replace("-", ""), 16).toString();
     }
 
     public String getOwnerOfCertificate(String serialNumber) {

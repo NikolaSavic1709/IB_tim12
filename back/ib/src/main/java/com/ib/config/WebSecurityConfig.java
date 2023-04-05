@@ -62,7 +62,10 @@ public class WebSecurityConfig {
 
         // sve neautentifikovane zahteve obradi uniformno i posalji 401 gresku
         http.exceptionHandling().authenticationEntryPoint(restAuthenticationEntryPoint);
-        http.authorizeHttpRequests().requestMatchers("/**").permitAll()
+        http.authorizeHttpRequests()
+                .requestMatchers("/api/login").permitAll()
+                .requestMatchers("/api/register").permitAll()
+//        http.authorizeHttpRequests().requestMatchers("/**").permitAll()
                 // za svaki drugi zahtev korisnik mora biti autentifikovan
                 .anyRequest().authenticated().and()
                 // za development svrhe ukljuci konfiguraciju za CORS iz WebConfig klase

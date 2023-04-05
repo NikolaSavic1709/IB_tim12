@@ -46,14 +46,15 @@ public class CertificateRequestService extends JPAService<CertificateRequest> im
         User user= userService.get(userId);
 
         String token = authHeader.substring(7);
-        if (tokenUtils.getIdFromToken(token)!=userId)
-            throw new InvalidUserException("Permission denied");
         if (user == null){
             throw new EntityNotFoundException("User does not exists");
         }
+        if (tokenUtils.getIdFromToken(token)!=userId && !tokenUtils.getRoleFromToken(token).equals("ADMIN"))
+            throw new InvalidUserException("Permission denied");
+
 
         List<CertificateRequest> requests;
-        if(user.getAuthority().getName().equals("ROLE_ADMIN"))
+        if(tokenUtils.getRoleFromToken(token).equals("ADMIN") && tokenUtils.getIdFromToken(token)==userId)
             requests = certificateRequestRepository.findAll();
         else
             requests = certificateRequestRepository.findAllByCertificateEmail(user.getEmail());
@@ -67,47 +68,60 @@ public class CertificateRequestService extends JPAService<CertificateRequest> im
 
         String token = authHeader.substring(7);
         String role = tokenUtils.getRoleFromToken(token);
-        if (!role.equals("ROLE_ADMIN") && requestCreation.getType().equals(CertificateType.ROOT))
+        if (!role.equals("ADMIN") && requestCreation.getType().equals(CertificateType.ROOT))
             throw new ForbiddenException("Permission denied");
+
+        if (requestCreation.getIssuer()==null && !requestCreation.getType().equals(CertificateType.ROOT))
+            throw new ForbiddenException("Couldn't create non-root certificate without issuer");
 
         String userEmail = tokenUtils.getEmailFromToken(token);
         if (!requestCreation.getEmail().equals(userEmail))
             throw new ForbiddenException("You can request a certificate only for your own");
 
-        Certificate issuerCert = certificateService.getBySerialNumber(requestCreation.getIssuer());
+        if(requestCreation.getIssuer()!=null && requestCreation.getType().equals(CertificateType.ROOT))
+            throw new ForbiddenException("Root certificates mustn't have issuer");
+
+
+        Certificate issuerCert=new Certificate();
+        if(requestCreation.getIssuer()!=null) {
+            issuerCert = certificateService.getBySerialNumber(requestCreation.getIssuer());
+            if(issuerCert.getStatus().equals(CertificateStatus.INVALID))
+                throw new EntityNotFoundException("Invalid issuer");
+        }
         Certificate certificateMetadata = certificateService.createCertificateMetadata(requestCreation);
 
         CertificateRequest request = new CertificateRequest(certificateMetadata);
 
-        if (role.equals("ROLE_ADMIN") || issuerCert.getEmail().equals(userEmail))
+        if (role.equals("ADMIN") || issuerCert.getEmail().equals(userEmail))
             instantApproval(request);
 
         return save(request);
     }
 
-    private void instantApproval(CertificateRequest certificateRequest) throws CertificateCreationException {
+    private void instantApproval(CertificateRequest certificateRequest) throws CertificateCreationException, ForbiddenException {
         Certificate certificateMetadata = certificateRequest.getCertificate();
         X509Certificate certificate = certificateService.generateCertificate(certificateMetadata);
         if (certificate != null) {
             certificateMetadata.setStatus(CertificateStatus.VALID);
             certificateRequest.setCertificate(certificateService.save(certificateMetadata));
             certificateRequest.setStatus(RequestStatus.ACCEPTED);
+            return;
         }
         throw new CertificateCreationException("Certificate creation failed");
     }
 
     @Override
-    public Certificate acceptRequest(CertificateRequest certificateRequest, String token) {
+    public Certificate acceptRequest(CertificateRequest certificateRequest, String token) throws ForbiddenException {
         Certificate newCertificate = certificateRequest.getCertificate();
         X509Certificate certificate = certificateService.generateCertificate(newCertificate);
-        if (certificate != null) {
-            if (certificateService.getOwnerOfCertificate(newCertificate.getIssuer()).equals(tokenUtils.getEmailFromToken(token.substring(7)))) {
+        if (certificate != null && certificateRequest.getStatus().equals(RequestStatus.PENDING) ) {
+            if ( certificateService.getOwnerOfCertificate(newCertificate.getIssuer()).equals(tokenUtils.getEmailFromToken(token.substring(7)))) {
                 newCertificate.setStatus(CertificateStatus.VALID);
-            certificateService.save(newCertificate);
-            certificateRequest.setStatus(RequestStatus.ACCEPTED);
-            certificateRequestRepository.save(certificateRequest);
-            return newCertificate;
-        }
+                certificateService.save(newCertificate);
+                certificateRequest.setStatus(RequestStatus.ACCEPTED);
+                certificateRequestRepository.save(certificateRequest);
+                return newCertificate;
+            }
         }
         return null;
     }
@@ -115,7 +129,7 @@ public class CertificateRequestService extends JPAService<CertificateRequest> im
     @Override
     public void rejectRequest(Integer id, String rejectionReason, String token) {
         CertificateRequest rejectedRequest = certificateRequestRepository.findById(id).orElse(null);
-        if (rejectedRequest != null) {
+        if (rejectedRequest != null && rejectedRequest.getStatus().equals(RequestStatus.PENDING)) {
             if (certificateService.getOwnerOfCertificate(rejectedRequest.getCertificate().getIssuer()).equals(tokenUtils.getEmailFromToken(token.substring(7)))) {
                 rejectedRequest.setRejectionReason(rejectionReason);
                 rejectedRequest.setStatus(RequestStatus.REJECTED);

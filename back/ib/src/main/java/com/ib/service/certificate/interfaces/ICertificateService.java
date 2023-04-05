@@ -1,6 +1,7 @@
 package com.ib.service.certificate.interfaces;
 
 import com.ib.DTO.RequestCreationDTO;
+import com.ib.exception.ForbiddenException;
 import com.ib.model.certificate.Certificate;
 import com.ib.model.certificate.CertificateRequest;
 import java.security.cert.X509Certificate;
@@ -11,7 +12,7 @@ public interface ICertificateService extends IJPAService<Certificate> {
     Certificate getBySerialNumber(String serialNumber) throws EntityNotFoundException;
 
     boolean getAndCheck(String id);
-    X509Certificate generateCertificate(Certificate certificate);
+    X509Certificate generateCertificate(Certificate certificate) throws ForbiddenException;
 
     String getOwnerOfCertificate(String serialNumber);
 
