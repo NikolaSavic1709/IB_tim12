@@ -1,5 +1,6 @@
 package com.ib.controller;
 
+import com.ib.DTO.RegistrationDTO;
 import com.ib.model.dto.JWTToken;
 import com.ib.model.dto.request.JwtAuthenticationRequest;
 import com.ib.model.dto.request.RegistrationRequest;
@@ -50,9 +51,9 @@ public class AuthenticationController {
     }
 
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RegistrationRequest> register( @RequestBody RegistrationRequest registrationRequest) {
+    public ResponseEntity<RegistrationDTO> register( @RequestBody RegistrationRequest registrationRequest) {
         EndUser newUser = new EndUser(registrationRequest);
         endUserService.register(newUser);
-        return new ResponseEntity<>(new RegistrationRequest(newUser), HttpStatus.OK);
+        return new ResponseEntity<>(new RegistrationDTO(newUser), HttpStatus.OK);
     }
 }

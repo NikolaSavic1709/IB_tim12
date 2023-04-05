@@ -80,6 +80,7 @@ public class CertificateService extends JPAService<Certificate> implements ICert
     }
     private boolean isDigitalSignatureValid(Certificate certificate){
         try {
+            if (certificate.getIssuer()==null) return true;
             X509Certificate cert=certificateFileStorage.getCertificateFromStorage(certificate.getSerialNumber());
             X509Certificate issuerCert=certificateFileStorage.getCertificateFromStorage(certificate.getIssuer());
 
@@ -144,9 +145,7 @@ public class CertificateService extends JPAService<Certificate> implements ICert
             String sn = certificateRequest.getSerialNumber();
             builderSubject.addRDN(BCStyle.UID, sn);
 
-            LocalDateTime now=LocalDateTime.now();
-            certificateRequest.setStartDate(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()));
-            certificateRequest.setEndDate(Date.from(now.plusYears(10).atZone(ZoneId.systemDefault()).toInstant()));
+            setDateRangeForType(certificateRequest);
 
             X509v3CertificateBuilder certGen = new JcaX509v3CertificateBuilder(
                     issuerX500Name,
@@ -172,6 +171,19 @@ public class CertificateService extends JPAService<Certificate> implements ICert
             throw new RuntimeException(e);
         }
         return null;
+    }
+
+    private void setDateRangeForType(Certificate certificateRequest) {
+        int years;
+        switch (certificateRequest.getType()){
+            case ROOT -> years=10;
+            case INTERMEDIATE -> years = 3;
+            default -> years = 1;
+        }
+
+        LocalDateTime now=LocalDateTime.now();
+        certificateRequest.setStartDate(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()));
+        certificateRequest.setEndDate(Date.from(now.plusYears(years).atZone(ZoneId.systemDefault()).toInstant()));
     }
 
     @Override
