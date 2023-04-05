@@ -6,9 +6,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static jakarta.persistence.InheritanceType.JOINED;
 import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
@@ -18,7 +21,7 @@ import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
 @Getter
 @Setter
 @Inheritance(strategy=JOINED)
-@Table(name = "members")
+@Table(name = "members",schema = "public")
 @Entity
 public class User implements UserDetails {
 
@@ -50,7 +53,10 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        Authority authority = this.getAuthority();
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority(authority.getName()));
+        return authorities;
     }
 
     @Override
