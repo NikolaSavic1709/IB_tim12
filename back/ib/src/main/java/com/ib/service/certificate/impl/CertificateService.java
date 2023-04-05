@@ -1,9 +1,10 @@
 package com.ib.service.certificate.impl;
 
+import com.ib.DTO.RequestCreationDTO;
+import com.ib.exception.ForbiddenException;
 import com.ib.model.certificate.Certificate;
-import com.ib.model.certificate.CertificateRequest;
 import com.ib.model.certificate.CertificateStatus;
-import com.ib.model.certificate.RequestStatus;
+import com.ib.model.certificate.CertificateType;
 import com.ib.model.users.User;
 import com.ib.repository.certificate.ICertificateRepository;
 import com.ib.service.CertificateFileStorage;
@@ -15,13 +16,17 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -55,6 +60,12 @@ public class CertificateService extends JPAService<Certificate> implements ICert
     }
 
     @Override
+    public Certificate getBySerialNumber(String serialNumber) throws EntityNotFoundException{
+        Optional<Certificate> certificate= Optional.ofNullable(certificateRepository.findBySerialNumber(serialNumber));
+        if(certificate.isEmpty()) throw new EntityNotFoundException();
+        else return certificate.get();
+    }
+    @Override
     public boolean getAndCheck(String serialNumber) throws EntityNotFoundException{
         Optional<Certificate> certificate= Optional.ofNullable(certificateRepository.findBySerialNumber(serialNumber));
         if(certificate.isEmpty()) throw new EntityNotFoundException();
@@ -62,48 +73,54 @@ public class CertificateService extends JPAService<Certificate> implements ICert
     }
     private boolean isValid(Certificate certificate){
         if(!isDigitalSignatureValid(certificate) || !isTrustedAuthority(certificate) || isCertificateRevoked(certificate) || isCertificateOutdated(certificate)) {
-            certificate.setStatus(CertificateStatus.INVALID);
             return false;
         }
         certificate.setStatus(CertificateStatus.VALID);
         return true;
     }
     private boolean isDigitalSignatureValid(Certificate certificate){
-        //konverzija u java certificate
-        //cert.verify(keyPairIssuer.getPublic());
-        return true;
+        try {
+            X509Certificate cert=certificateFileStorage.getCertificateFromStorage(certificate.getSerialNumber());
+            X509Certificate issuerCert=certificateFileStorage.getCertificateFromStorage(certificate.getIssuer());
+
+            cert.verify(issuerCert.getPublicKey());
+            return true;
+        } catch (InvalidKeyException | CertificateException | NoSuchAlgorithmException | SignatureException | NoSuchProviderException e) {
+            return false;
+        }
     }
     private boolean isTrustedAuthority(Certificate certificate){
-        //konverzija u java certificate
-        // uzima se roditelj sertifikata
-        // cert.getIssuer.getID po njemu se uzima sertifikat iz keystore-a
-        // zove se isValid za njega
-        // ako je roditelj null to je to
-        //if(roditelj==null || isValid(roditelj)) return true;
-        // return false;
-        return true;
+        if(certificate.getType().equals(CertificateType.ROOT) || isValid(certificateRepository.findBySerialNumber(certificate.getIssuer())))
+            return true;
+        return false;
+
     }
     private boolean isCertificateRevoked(Certificate certificate){
         // ova metoda se ne mora koristiti ako ce svaki put kada se povuce ili ponovo objavi sertifikat promeni fleg u bazi
-        return true;
+        return certificate.getStatus()==CertificateStatus.INVALID;
     }
     private boolean isCertificateOutdated(Certificate certificate){
         LocalDateTime now = LocalDateTime.now();
         return certificate.getStartDate().after(Date.from(now.atZone(ZoneId.systemDefault()).toInstant())) || certificate.getEndDate().before(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()));
     }
 
-    public X509Certificate generateCertificate(Certificate certificateRequest) {
+    public X509Certificate generateCertificate(Certificate certificateRequest) throws ForbiddenException{
         try {
             JcaContentSignerBuilder signerBuilder = new JcaContentSignerBuilder("SHA256WithRSAEncryption");
 
             signerBuilder = signerBuilder.setProvider("BC");
             KeyPair keyPairSubject = generateKeyPair();
-            //TODO: get issuer private key from key folders
-            ContentSigner contentSigner = signerBuilder.build(keyPairSubject.getPrivate());
+
+            ContentSigner contentSigner;
 
             X500Name issuerX500Name = null;
             if (certificateRequest.getIssuer()!=null){
+                PrivateKey issuerPrivateKey=certificateFileStorage.getPrivateKeyFromStorage(certificateRequest.getIssuer());
+                contentSigner = signerBuilder.build(issuerPrivateKey);
+
                 Certificate issuerCert =  certificateRepository.findBySerialNumber(certificateRequest.getIssuer());
+                if (issuerCert.getType().equals(CertificateType.END))
+                    throw new ForbiddenException("End certificate can't be issuer");
 
                 User issuer = userService.findByEmail(issuerCert.getEmail());
                 X500NameBuilder builderIssuer = generateX500Name(issuer);
@@ -111,11 +128,25 @@ public class CertificateService extends JPAService<Certificate> implements ICert
 
                 issuerX500Name = builderIssuer.build();
             }
+            else{
+//                PrivateKey issuerPrivateKey=certificateFileStorage.getPrivateKeyFromStorage(certificateRequest.getIssuer());
+                contentSigner = signerBuilder.build(keyPairSubject.getPrivate());
 
+                User issuer = userService.findByEmail(certificateRequest.getEmail());
+                X500NameBuilder builderIssuer = generateX500Name(issuer);
+                builderIssuer.addRDN(BCStyle.UID, certificateRequest.getSerialNumber());
+                issuerX500Name = builderIssuer.build();
+            }
             User subject = userService.findByEmail(certificateRequest.getEmail());
             X500NameBuilder builderSubject = generateX500Name(subject);
-            String sn = generateSerialNumber();
+
+
+            String sn = certificateRequest.getSerialNumber();
             builderSubject.addRDN(BCStyle.UID, sn);
+
+            LocalDateTime now=LocalDateTime.now();
+            certificateRequest.setStartDate(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()));
+            certificateRequest.setEndDate(Date.from(now.plusYears(10).atZone(ZoneId.systemDefault()).toInstant()));
 
             X509v3CertificateBuilder certGen = new JcaX509v3CertificateBuilder(
                     issuerX500Name,
@@ -143,11 +174,24 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         return null;
     }
 
+    @Override
+    public Certificate createCertificateMetadata(RequestCreationDTO requestCreation){
+        Certificate certificateMetaData = new Certificate(
+                generateSerialNumber(),
+                requestCreation.getSignatureAlgorithm(),
+                requestCreation.getIssuer(),
+                CertificateStatus.INVALID,
+                requestCreation.getType(),
+                requestCreation.getEmail()
+        );
+        return save(certificateMetaData);
+    }
+
     private static KeyPair generateKeyPair() {
         try {
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
             SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
-            keyGen.initialize(2048, random);
+            keyGen.initialize(1024, random);
             return keyGen.generateKeyPair();
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
@@ -170,7 +214,7 @@ public class CertificateService extends JPAService<Certificate> implements ICert
 
     private static String generateSerialNumber() {
         StringBuilder sn = new StringBuilder();
-        return sn.append(UUID.randomUUID().toString()).append(UUID.randomUUID().toString()).toString();
+        return new BigInteger(sn.append(UUID.randomUUID()).append(UUID.randomUUID()).toString().replace("-", ""), 16).toString();
     }
 
     public String getOwnerOfCertificate(String serialNumber) {
