@@ -1,0 +1,24 @@
+<mat-toolbar color="primary">
+  <mat-toolbar-row>
+    <button mat-icon-button (click)="sidenav.toggle()">
+      <mat-icon >menu</mat-icon>
+    </button>
+    <span style="font-size: 22px; margin-left: 2vw;">Certified</span>
+    </mat-toolbar-row>
+</mat-toolbar>
+<mat-sidenav-container>
+  <mat-sidenav #sidenav>
+    <mat-nav-list>
+
+      <a mat-list-item [routerLink]="'/certificates'"> Certificates </a>
+      <a mat-list-item [routerLink]="'/requests'"> Requests </a>
+      <a mat-list-item [routerLink]="'/login'"> Logout </a>
+
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <div class="page">
+  <router-outlet></router-outlet>
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
