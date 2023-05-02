@@ -72,7 +72,7 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         return isValid(certificate.get());
     }
     private boolean isValid(Certificate certificate){
-        if(!isDigitalSignatureValid(certificate) || !isTrustedAuthority(certificate) || isCertificateRevoked(certificate) || isCertificateOutdated(certificate)) {
+        if(!isDigitalSignatureValid(certificate) || isCertificateOutdated(certificate)) {
             return false;
         }
         certificate.setStatus(CertificateStatus.VALID);

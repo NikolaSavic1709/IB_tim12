@@ -27,10 +27,10 @@ public class CertificateController {
 
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getAllEmployees() {
+    public ResponseEntity<?> getAllValid() {
 
         List<CertificateDTO> certificateDTOs = certificateService.getAll().parallelStream()
-                .filter(certificate -> certificate.getStatus().equals(CertificateStatus.VALID))
+//                .filter(certificate -> certificate.getStatus().equals(CertificateStatus.VALID))
                 .map(CertificateDTO::new).collect(Collectors.toList());
         ObjectListResponseDTO<CertificateDTO> objectListResponse = new ObjectListResponseDTO<>(certificateDTOs.size(), certificateDTOs);
         return new ResponseEntity<>(objectListResponse, HttpStatus.OK);
@@ -38,10 +38,23 @@ public class CertificateController {
 
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @GetMapping(value = "/validity/{serialNumber}")
-    public ResponseEntity<?> getAllEmployees(@PathVariable String serialNumber) {
+    public ResponseEntity<?> validateCertificate(@PathVariable String serialNumber) {
         try {
             boolean isValid = certificateService.getAndCheck(serialNumber);
             return new ResponseEntity<>(isValid, HttpStatus.OK);
+        }
+        catch (EntityNotFoundException e)
+        {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
+    @GetMapping(value = "/{serialNumber}")
+    public ResponseEntity<?> getById(@PathVariable String serialNumber) {
+        try {
+            CertificateDTO certificateDTO=new CertificateDTO(certificateService.getBySerialNumber(serialNumber));
+            return new ResponseEntity<>(certificateDTO, HttpStatus.OK);
         }
         catch (EntityNotFoundException e)
         {
