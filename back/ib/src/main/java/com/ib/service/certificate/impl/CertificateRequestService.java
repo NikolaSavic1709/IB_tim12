@@ -46,18 +46,14 @@ public class CertificateRequestService extends JPAService<CertificateRequest> im
         User user= userService.get(userId);
 
         String token = authHeader.substring(7);
-
         if (user == null){
             throw new EntityNotFoundException("User does not exists");
         }
         if (tokenUtils.getIdFromToken(token)!=userId && !tokenUtils.getRoleFromToken(token).equals("ADMIN"))
             throw new InvalidUserException("Permission denied");
-
-
         List<CertificateRequest> requests;
-        if(tokenUtils.getRoleFromToken(token).equals("ADMIN") && tokenUtils.getIdFromToken(token)==userId) {
+        if(tokenUtils.getRoleFromToken(token).equals("ADMIN") && tokenUtils.getIdFromToken(token)==userId)
             requests = certificateRequestRepository.findAll();
-        }
         else
             requests = certificateRequestRepository.findAllByCertificateEmail(user.getEmail());
         return requests;
