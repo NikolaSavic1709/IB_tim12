@@ -1,6 +1,7 @@
 <div class="table-header">
+    <span style="font-size: 20px; font-weight: 500;">Requests</span>
     <span style="font-size: 16px; height: 20px;">Total selected: {{selection.selected.length}}</span>
-    <button mat-raised-button>
+    <button mat-raised-button (click)="openForm()">
         <mat-icon> add </mat-icon>
         Create request
     </button>

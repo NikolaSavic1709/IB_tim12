@@ -1,0 +1,22 @@
+<h1 mat-dialog-title style="font-size: 20sp;">Certificate request</h1>
+<mat-dialog-content>
+    <form>
+        <mat-form-field style="width:250px">
+            <mat-label>Algorithm</mat-label>
+            <input matInput formControlName="algorithm" type="text">
+        </mat-form-field>
+        <mat-form-field style="width:250px">
+            <mat-label>Issuer</mat-label>
+            <input matInput formControlName="issuer" type="text">
+        </mat-form-field>
+      <mat-select style="width:240px; margin-left: 10px;" formControlName="certificateType"  placeholder="   Type">
+        <mat-option *ngIf="admin" [value]="'Intermediate'">Root</mat-option>
+        <mat-option [value]="'Intermediate'">Intermediate</mat-option>
+        <mat-option [value]="'End'">End</mat-option>
+      </mat-select>
+    </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-button type="submit">Submit</button>
+    <button mat-button (click)="closeDialog()">Close</button>
+</mat-dialog-actions>

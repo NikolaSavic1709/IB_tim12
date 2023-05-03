@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { CertificateResponse } from '../model/CertificateResponse';
-import { CertificateServiceService } from '../service/certificate-service.service';
+import { CertificateResponse } from '../../model/CertificateResponse';
+import { CertificateServiceService } from '../../service/certificate-service.service';
 import {MatTableDataSource} from '@angular/material/table';
 import {SelectionModel} from '@angular/cdk/collections';
 
