@@ -1,6 +1,6 @@
 <mat-toolbar color="primary">
   <mat-toolbar-row>
-    <button mat-icon-button (click)="sidenav.toggle()">
+    <button #button mat-icon-button (click)="sidenav.toggle()" [disabled]="!authenticated">
       <mat-icon >menu</mat-icon>
     </button>
     <span style="font-size: 22px; margin-left: 2vw;">Certified</span>
@@ -8,11 +8,11 @@
 </mat-toolbar>
 <mat-sidenav-container>
   <mat-sidenav #sidenav>
-    <mat-nav-list>
+    <mat-nav-list *ngIf="authenticated" >
 
       <a mat-list-item [routerLink]="'/certificates'"> Certificates </a>
       <a mat-list-item [routerLink]="'/requests'"> Requests </a>
-      <a mat-list-item [routerLink]="'/login'"> Logout </a>
+      <a mat-list-item (click)="logout(); sidenav.toggle(); " [routerLink]="'/login'"> Logout </a>
 
     </mat-nav-list>
   </mat-sidenav>

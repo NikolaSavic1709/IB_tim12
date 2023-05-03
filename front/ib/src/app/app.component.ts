@@ -8,4 +8,9 @@ import { Component } from '@angular/core';
 export class AppComponent {
   title = 'ib';
   authenticated = true;
+  
+  logout() {
+    localStorage.removeItem("user");
+    this.authenticated = false;
+  }
 }

@@ -9,6 +9,7 @@ import com.ib.model.certificate.Certificate;
 import com.ib.model.certificate.CertificateRequest;
 import com.ib.service.certificate.interfaces.ICertificateRequestService;
 import com.ib.service.users.interfaces.IUserService;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/request")
+@CrossOrigin(origins = "http://localhost:4200/**")
 public class CertificateRequestController {
 
     private final IUserService userService;
@@ -37,7 +39,7 @@ public class CertificateRequestController {
 
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @GetMapping(value = "/all/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getAllRequests(@PathVariable Integer userId, @RequestHeader("Authorization") String token)
+    public ResponseEntity<?> getAllRequests(@Nullable @PathVariable Integer userId, @RequestHeader("Authorization") String token)
     {
         try {
             List<CertificateRequest> requests = requestService.getRequests(userId, token);
@@ -46,6 +48,7 @@ public class CertificateRequestController {
             for (CertificateRequest req : requests){
                 requestsDTO.add(new CertificateForRequestDTO(req));
             }
+            System.out.println(requestsDTO);
             return new ResponseEntity<>(requestsDTO, HttpStatus.OK);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
