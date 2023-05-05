@@ -65,6 +65,8 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests()
                 .requestMatchers("/api/login").permitAll()
                 .requestMatchers("/api/register").permitAll()
+                .requestMatchers("/api/certificate/validity/file").permitAll()
+//                .requestMatchers("/api/certificate/**").permitAll()
 //        http.authorizeHttpRequests().requestMatchers("/**").permitAll()
                 // za svaki drugi zahtev korisnik mora biti autentifikovan
                 .anyRequest().authenticated().and()

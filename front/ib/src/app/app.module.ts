@@ -22,6 +22,7 @@ import { AuthInterceptor } from 'src/app/auth/auth.interceptor';
 import { RequestDialogComponent } from './dialog/request-dialog/request-dialog/request-dialog.component';
 import { LoginComponent } from './components/login/login.component';
 import { RegisterComponent } from './components/register/register.component';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 @NgModule({
   declarations: [
@@ -44,6 +45,7 @@ import { RegisterComponent } from './components/register/register.component';
     MatInputModule,
     MatTableModule,
     MatCheckboxModule,
+    MatSnackBarModule,
     HttpClientModule,
     MatDialogModule,
     MatOptionModule,

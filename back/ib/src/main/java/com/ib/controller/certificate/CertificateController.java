@@ -6,12 +6,19 @@ import com.ib.model.certificate.CertificateStatus;
 import com.ib.service.certificate.interfaces.ICertificateService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.*;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,6 +54,21 @@ public class CertificateController {
         }
     }
 
+//    @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
+    @GetMapping(value = "/validity/file")
+    public ResponseEntity<?> validateCertificateByCopy(@RequestParam("file") MultipartFile file) {
+        try {
+            byte[] bytes = file.getBytes();
+            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+
+            X509Certificate cert = (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(bytes));
+
+            return ResponseEntity.ok().body("File uploaded successfully.");
+        } catch (IOException | CertificateException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload file: " + e.getMessage());
+        }
+
+    }
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @GetMapping(value = "/{serialNumber}")
     public ResponseEntity<?> getById(@PathVariable String serialNumber) {
@@ -58,5 +80,40 @@ public class CertificateController {
         {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
+    }
+
+    @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
+    @GetMapping(value = "/file/{serialNumber}")
+    public ResponseEntity<?> getFileBySerialNumber(@PathVariable String serialNumber) {
+        File file = new File("src/main/resources/certificates/"+serialNumber+".crt");
+        InputStreamResource resource = null;
+        try {
+            resource = new InputStreamResource(new FileInputStream(file));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Definišemo zaglavlja
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", String.format("attachment; filename=\"%s\"", file.getName()));
+        headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+        headers.add("Expires", "0");
+
+        // Vraćamo odgovor sa datotekom i zaglavljima
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentLength(file.length())
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .body(resource);
+//        try {
+////            CertificateDTO certificateDTO=new CertificateDTO(certificateService.getBySerialNumber(serialNumber));
+//            InputStream inputStream=getClass().getResourceAsStream("src/main/resources/certificates/"+serialNumber+".crt");
+////            return new ResponseEntity<>(certificateDTO, HttpStatus.OK);
+//            return new ResponseEntity<>(new InputStreamResource(inputStream),HttpStatus.OK);
+//        }
+//        catch (EntityNotFoundException e)
+//        {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+//        }
     }
 }
