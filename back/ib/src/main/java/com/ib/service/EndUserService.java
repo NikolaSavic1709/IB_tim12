@@ -40,7 +40,8 @@ public class EndUserService {
     @Value("${TWILIO_OUTGOING_SMS_NUMBER}")
     private String OUTGOING_SMS_NUMBER;
 
-    private static final String EMAIL_SENDER = "jnizvodno@gmail.com";
+    @Value("${EMAIL_SENDER}")
+    private String EMAIL_SENDER;
     private final AuthorityService authorityService;
     private final PasswordEncoder passwordEncoder;
     private final IEndUserRepository endUserRepository;
@@ -167,7 +168,7 @@ public class EndUserService {
         EndUser user = endUserRepository.findByEmail(email);
         if (user==null)
             throw new InvalidUserException("Invalid user");
-        if (user.getMFAToken().equals(token))
+        if (!user.getMFAToken().equals(token))
             throw new InvalidUserException("Invalid mfa token");
         if (user.getMFATokenExpiryDate().isBefore(LocalDateTime.now()))
             throw new UserMFAExpiredException("MFA token expired. Try again!");

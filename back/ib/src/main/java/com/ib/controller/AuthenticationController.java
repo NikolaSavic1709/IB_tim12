@@ -51,7 +51,7 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid login");
         }
 
-        String mfaType = authenticationRequest.getMFAType();
+        String mfaType = authenticationRequest.getMfaType();
         if (!mfaType.equals("email") && !mfaType.equals("sms")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("MFA is only possible via email or SMS");
         }
@@ -61,7 +61,7 @@ public class AuthenticationController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         try {
-            endUserService.sendMFAToken(authenticationRequest.getEmail(), authenticationRequest.getMFAType());
+            endUserService.sendMFAToken(authenticationRequest.getEmail(), authenticationRequest.getMfaType());
         } catch (MailSendingException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while sending mail, possible inactive email address");
         } catch (SMSSendingException e) {

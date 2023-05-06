@@ -1,8 +1,16 @@
 package com.ib.model.dto.request;
 
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 // DTO za login
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class JwtAuthenticationRequest {
     @NotNull
     @NotEmpty
@@ -17,44 +25,6 @@ public class JwtAuthenticationRequest {
     @NotNull
     @NotEmpty
     @NotBlank
-    private String MFAType;
+    private String mfaType;
 
-    public JwtAuthenticationRequest() {
-        super();
-    }
-
-    public JwtAuthenticationRequest(String email, String password) {
-        this.setEmail(email);
-        this.setPassword(password);
-    }
-
-    public JwtAuthenticationRequest(String email, String password, String MFAType) {
-        this.setEmail(email);
-        this.setPassword(password);
-        this.setMFAType(MFAType);
-    }
-
-    public String getEmail() {
-        return this.email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return this.password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getMFAType() {
-        return this.MFAType;
-    }
-
-    public void setMFAType(String MFAType) {
-        this.MFAType = MFAType;
-    }
 }

@@ -28,6 +28,6 @@ public class ResetPasswordDTO {
     @NotNull
     @NotEmpty
     @NotBlank
-    @Pattern(regexp = "^(?=.*\\d)(?=.*[A-Z])(?!.*[^a-zA-Z0-9@#$^+=])(.{8,15})$")
+   // @Pattern(regexp = "^(?=.*\\d)(?=.*[A-Z])(?!.*[^a-zA-Z0-9@#$^+=])(.{8,15})$")
     private String newPassword;
 }

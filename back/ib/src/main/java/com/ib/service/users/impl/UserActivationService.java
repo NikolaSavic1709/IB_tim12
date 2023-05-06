@@ -56,7 +56,8 @@ public class UserActivationService extends JPAService<UserActivation> implements
     private final IUserActivationRepository userActivationRepository;
     private final IEndUserRepository userRepository;
 
-    private static final String EMAIL_SENDER = "jnizvodno@gmail.com";
+    @Value("${EMAIL_SENDER}")
+    private String EMAIL_SENDER;
 
     @Autowired
     public UserActivationService(IUserActivationRepository userActivationRepository, IEndUserRepository userRepository) {
