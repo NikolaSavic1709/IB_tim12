@@ -20,13 +20,13 @@ public class PasswordResetToken {
     private Integer id;
 
     @Column(name = "token", nullable = false)
-    private String token;
+    private Integer token;
 
-    @OneToOne(targetEntity = User.class, fetch = FetchType.EAGER)
+    @OneToOne(targetEntity = EndUser.class, fetch = FetchType.EAGER)
     @JoinColumn(nullable = false, name = "user_id")
-    private User user;
+    private EndUser user;
 
-    @Column(name = "token_creation_date", nullable = false)
-    private LocalDateTime tokenCreationDate;
+    @Column(name = "expiry_date", nullable = false)
+    private LocalDateTime tokenExpiryDate;
 }
 

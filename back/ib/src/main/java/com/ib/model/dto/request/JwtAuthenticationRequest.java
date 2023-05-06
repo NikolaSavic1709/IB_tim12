@@ -14,6 +14,11 @@ public class JwtAuthenticationRequest {
     @NotBlank
     private String password;
 
+    @NotNull
+    @NotEmpty
+    @NotBlank
+    private String MFAType;
+
     public JwtAuthenticationRequest() {
         super();
     }
@@ -21,6 +26,12 @@ public class JwtAuthenticationRequest {
     public JwtAuthenticationRequest(String email, String password) {
         this.setEmail(email);
         this.setPassword(password);
+    }
+
+    public JwtAuthenticationRequest(String email, String password, String MFAType) {
+        this.setEmail(email);
+        this.setPassword(password);
+        this.setMFAType(MFAType);
     }
 
     public String getEmail() {
@@ -37,5 +48,13 @@ public class JwtAuthenticationRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getMFAType() {
+        return this.MFAType;
+    }
+
+    public void setMFAType(String MFAType) {
+        this.MFAType = MFAType;
     }
 }

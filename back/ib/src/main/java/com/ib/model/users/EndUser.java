@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 
 @NoArgsConstructor
 @Getter
@@ -16,7 +18,11 @@ import lombok.Setter;
 @Entity
 public class EndUser extends User{
 
+    @Column(name = "mfa_token")
+    private Integer MFAToken;
 
+    @Column(name = "mfa_expiry_date")
+    private LocalDateTime MFATokenExpiryDate;
 
     public EndUser(RegistrationRequest registrationRequest) {
         this.setName(registrationRequest.getName());
