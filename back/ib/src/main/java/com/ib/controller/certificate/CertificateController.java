@@ -54,18 +54,17 @@ public class CertificateController {
         }
     }
 
-//    @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
-    @GetMapping(value = "/validity/file")
+    @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
+    @PostMapping(value = "/validity/file")
     public ResponseEntity<?> validateCertificateByCopy(@RequestParam("file") MultipartFile file) {
         try {
-            byte[] bytes = file.getBytes();
-            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+            if(certificateService.checkByCopy(file))
+                return new ResponseEntity<>(HttpStatus.OK);
+            else
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Not valid");
+        } catch (CertificateException | IOException | EntityNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Not valid");
 
-            X509Certificate cert = (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(bytes));
-
-            return ResponseEntity.ok().body("File uploaded successfully.");
-        } catch (IOException | CertificateException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload file: " + e.getMessage());
         }
 
     }

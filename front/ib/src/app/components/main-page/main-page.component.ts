@@ -67,14 +67,27 @@ export class MainPageComponent implements OnInit{
         this.certificateService.uploadCertificate(file).subscribe({
             next: (res) => {
               
-              console.log("validan")
+              this.snackBar.open('Valid', 'Close', {
+                duration: 3000,
+                verticalPosition: 'bottom',
+                horizontalPosition: 'center',
+              });
             },
             error:(error)=>{
-              console.log("nije validan");
+              this.snackBar.open('Not valid', 'Close', {
+                duration: 3000,
+                verticalPosition: 'bottom',
+                horizontalPosition: 'center',
+              });
             }
           });
-      } else 
-          console.log("nije validan");
+      } else {
+        this.snackBar.open('Error', 'Close', {
+          duration: 3000,
+          verticalPosition: 'bottom',
+          horizontalPosition: 'center',
+        });
+      }
     }
 
   }

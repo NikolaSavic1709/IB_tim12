@@ -16,12 +16,10 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.*;
@@ -41,6 +39,7 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class CertificateService extends JPAService<Certificate> implements ICertificateService {
@@ -70,6 +69,16 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         Optional<Certificate> certificate= Optional.ofNullable(certificateRepository.findBySerialNumber(serialNumber));
         if(certificate.isEmpty()) throw new EntityNotFoundException();
         return isValid(certificate.get());
+    }
+    @Override
+    public boolean checkByCopy(MultipartFile file) throws IOException, CertificateException, EntityNotFoundException {
+        byte[] bytes = file.getBytes();
+        CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+
+        X509Certificate cert = (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(bytes));
+        String serialNumber= String.valueOf(cert.getSerialNumber());
+        return getAndCheck(serialNumber);
+
     }
     private boolean isValid(Certificate certificate){
         if(!isDigitalSignatureValid(certificate) || isCertificateOutdated(certificate)) {
