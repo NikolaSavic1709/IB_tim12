@@ -1,0 +1,34 @@
+<mat-toolbar color="primary">
+  <mat-toolbar-row class="toolbar">
+    <div class="toolbar">
+    <button #button mat-icon-button (click)="sidenav.toggle()" *ngIf="authenticated">
+      <mat-icon >menu</mat-icon>
+    </button>
+    <span style="font-size: larger; margin-left: 3vw;">Certified</span>
+    </div>
+    <div>
+      <button #button mat-button *ngIf="!authenticated" [routerLink]="'/login'">
+        LOGIN
+      </button>
+      <button #button mat-button *ngIf="!authenticated" [routerLink]="'/register'">
+        REGISTER
+      </button>
+    </div>
+    </mat-toolbar-row>
+</mat-toolbar>
+<mat-sidenav-container>
+  <mat-sidenav #sidenav>
+    <mat-nav-list *ngIf="authenticated" >
+
+      <a mat-list-item [routerLink]="'/certificates'"> Certificates </a>
+      <a mat-list-item [routerLink]="'/requests'"> Requests </a>
+      <a mat-list-item (click)="logout(); sidenav.toggle(); " [routerLink]="'/login'"> Logout </a>
+
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <div class="page">
+  <router-outlet></router-outlet>
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>

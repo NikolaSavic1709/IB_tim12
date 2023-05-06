@@ -51,8 +51,6 @@ public class CertificateRequestService extends JPAService<CertificateRequest> im
         }
         if (tokenUtils.getIdFromToken(token)!=userId && !tokenUtils.getRoleFromToken(token).equals("ADMIN"))
             throw new InvalidUserException("Permission denied");
-
-
         List<CertificateRequest> requests;
         if(tokenUtils.getRoleFromToken(token).equals("ADMIN") && tokenUtils.getIdFromToken(token)==userId)
             requests = certificateRequestRepository.findAll();

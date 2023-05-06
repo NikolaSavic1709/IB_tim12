@@ -1,0 +1,11 @@
+table {
+    margin-top: 20px;
+}
+
+.table-header {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
