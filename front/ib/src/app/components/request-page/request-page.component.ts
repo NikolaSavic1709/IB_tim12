@@ -15,7 +15,7 @@ export class RequestPageComponent {
 
     certificates: CertificateRequest[] = [];
     displayedColumns: string[] = ['select', 'serial number', 'Issuer', 'Valid from', 'Valid to', 'Type', 'Subject', 'Status'];
-    dataSource = new MatTableDataSource<CertificateRequest>(this.certificates);
+    dataSource = new MatTableDataSource<CertificateRequest>();
     selection = new SelectionModel<CertificateRequest>(true, []);
   
     constructor(private certificateRequestService: CertificateRequestService, private matDialog: MatDialog) { }
@@ -25,8 +25,12 @@ export class RequestPageComponent {
       this.certificateRequestService.getCertificates().subscribe({
         next: (res) => {
           this.certificates = res;
+          this.dataSource.data = this.certificates;
+
         },
       });
+
+
     }
   
     isAllSelected() {

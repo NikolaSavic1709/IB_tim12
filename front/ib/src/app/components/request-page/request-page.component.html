@@ -30,7 +30,7 @@
     
       <ng-container matColumnDef="serial number">
         <th mat-header-cell *matHeaderCellDef> Serial No. </th>
-        <td mat-cell *matCellDef="let element"> {{element.serialNumber}} </td>
+        <td mat-cell *matCellDef="let element" class="serial-number" [title]="element.serialNumber"> {{element.serialNumber}} </td>
       </ng-container>
 
       <ng-container matColumnDef="Issuer">

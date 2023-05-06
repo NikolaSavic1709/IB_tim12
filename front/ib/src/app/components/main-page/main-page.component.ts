@@ -24,6 +24,7 @@ export class MainPageComponent implements OnInit{
     this.certificateService.getCertificates().subscribe({
       next: (res) => {
         this.certificates = res.results;
+        this.dataSource = new MatTableDataSource<CertificateResponse>(this.certificates);
       },
     });
   }
