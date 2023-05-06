@@ -24,6 +24,7 @@ public class EndUser extends User{
         this.setEmail(registrationRequest.getEmail());
         this.setTelephoneNumber(registrationRequest.getTelephoneNumber());
         this.setPassword(registrationRequest.getPassword());
+        this.setEnabled(false);
     }
 
     public EndUser(Integer id, String email, String name, String surname, String telephoneNumber, String password, Authority authority, boolean isEnabled) {

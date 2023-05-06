@@ -37,7 +37,10 @@ public class RegistrationRequest {
     @NotBlank
     @Pattern(regexp = "^(?=.*\\d)(?=.*[A-Z])(?!.*[^a-zA-Z0-9@#$^+=])(.{8,15})$")
     private String password;
-
+    @NotNull
+    @NotEmpty
+    @NotBlank
+    private String userActivationType;
 
     public RegistrationRequest(EndUser endUser) {
         this.id = endUser.getId();

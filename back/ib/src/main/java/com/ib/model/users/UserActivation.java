@@ -20,10 +20,10 @@ public class UserActivation {
     private Integer id;
 
     @OneToOne
-    private User user;
+    private EndUser user;
 
     @Column(name = "token", nullable = false)
-    private String token;
+    private Integer token;
 
     @Column(name = "creation_date", nullable = false)
     private LocalDateTime creationDate;
@@ -31,7 +31,7 @@ public class UserActivation {
     @Column(name = "expiry_date", nullable = false)
     private LocalDateTime expiryDate;
 
-    public UserActivation(User user, LocalDateTime creationDate, LocalDateTime expiryDate, String token) {
+    public UserActivation(EndUser user, LocalDateTime creationDate, LocalDateTime expiryDate, Integer token) {
         this.user = user;
         this.creationDate = creationDate;
         this.expiryDate = expiryDate;
