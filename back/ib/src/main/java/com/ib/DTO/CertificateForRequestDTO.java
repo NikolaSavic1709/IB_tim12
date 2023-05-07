@@ -24,7 +24,9 @@ public class CertificateForRequestDTO {
     private String serialNumber;
     private String signatureAlgorithm;
     private String issuer;
+    @JsonFormat(pattern= "dd-MM-yyyy")
     private Date startDate;
+    @JsonFormat(pattern= "dd-MM-yyyy")
     private Date endDate;
     private CertificateStatus certificateStatus;
     private CertificateType type;

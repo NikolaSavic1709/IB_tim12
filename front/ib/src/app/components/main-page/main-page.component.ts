@@ -14,7 +14,7 @@ import {SelectionModel} from '@angular/cdk/collections';
 export class MainPageComponent implements OnInit{
   certificates: CertificateResponse[] = [];
   displayedColumns: string[] = ['select', 'Valid from', 'Valid to', 'Type', 'Subject'];
-  dataSource = new MatTableDataSource<CertificateResponse>(this.certificates);
+  dataSource = new MatTableDataSource<CertificateResponse>();
   selection = new SelectionModel<CertificateResponse>(true, []);
 
   constructor(private certificateService: CertificateServiceService) { }
@@ -24,6 +24,7 @@ export class MainPageComponent implements OnInit{
     this.certificateService.getCertificates().subscribe({
       next: (res) => {
         this.certificates = res.results;
+        this.dataSource = new MatTableDataSource<CertificateResponse>(this.certificates);
       },
     });
   }

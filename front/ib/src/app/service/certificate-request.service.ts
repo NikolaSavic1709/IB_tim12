@@ -18,7 +18,7 @@ export class CertificateRequestService {
     return this.http.get<CertificateRequest[]>(environment.apiHost + "/api/request/all/" + this.authService.getId());
   }
 
-  sendRequests(CreateCertificate : CreateCertificate): Observable<CertificateRequest> {
+  sendRequest(CreateCertificate : CreateCertificate): Observable<CertificateRequest> {
     return this.http.post<CertificateRequest>(environment.apiHost + "/api/request/create", CreateCertificate);
   }
 
