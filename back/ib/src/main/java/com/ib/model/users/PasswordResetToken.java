@@ -22,9 +22,9 @@ public class PasswordResetToken {
     @Column(name = "token", nullable = false)
     private Integer token;
 
-    @OneToOne(targetEntity = EndUser.class, fetch = FetchType.EAGER)
+    @OneToOne(targetEntity = User.class, fetch = FetchType.EAGER)
     @JoinColumn(nullable = false, name = "user_id")
-    private EndUser user;
+    private User user;
 
     @Column(name = "expiry_date", nullable = false)
     private LocalDateTime tokenExpiryDate;

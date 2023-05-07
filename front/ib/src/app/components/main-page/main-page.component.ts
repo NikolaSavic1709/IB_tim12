@@ -44,17 +44,19 @@ export class MainPageComponent implements OnInit{
         this.dataSource.data.forEach(row => this.selection.select(row));
   }
   download(){
-    let serialNumber="96065034179050385728576056370750113417877590951777162458597610369742001313703";
-    this.certificateService.downloadCertificate(serialNumber).subscribe({
-      next: (res) => {
-        const file = new Blob([res], { type: 'application/x-x509-ca-cert' });
-        saveAs(file, serialNumber+'.crt');
-        this.snackBar.open('Successfull download', 'Close', {
-          duration: 3000,
-          verticalPosition: 'bottom',
-          horizontalPosition: 'center',
-        });
-      },
+    this.selection.selected.forEach(cert => {
+      let serialNumber = cert.serialNumber;
+      this.certificateService.downloadCertificate(serialNumber).subscribe({
+        next: (res) => {
+          const file = new Blob([res], { type: 'application/x-x509-ca-cert' });
+          saveAs(file, serialNumber+'.crt');
+          this.snackBar.open('Successfull download', 'Close', {
+            duration: 3000,
+            verticalPosition: 'bottom',
+            horizontalPosition: 'center',
+          });
+        },
+      });
     });
   }
 

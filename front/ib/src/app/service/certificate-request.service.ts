@@ -15,11 +15,11 @@ export class CertificateRequestService {
   constructor(private http: HttpClient, private authService: AuthService) { }
 
   getCertificates(): Observable<CertificateRequest[]> {
-    return this.http.get<CertificateRequest[]>(environment.apiHost + "/api/request/all/" + this.authService.getId());
+    return this.http.get<CertificateRequest[]>(environment.apiHost + "request/all/" + this.authService.getId());
   }
 
   sendRequest(CreateCertificate : CreateCertificate): Observable<CertificateRequest> {
-    return this.http.post<CertificateRequest>(environment.apiHost + "/api/request/create", CreateCertificate);
+    return this.http.post<CertificateRequest>(environment.apiHost + "request/create", CreateCertificate);
   }
 
   ngOnInit() {

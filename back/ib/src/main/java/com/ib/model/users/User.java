@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -51,6 +52,12 @@ public class User implements UserDetails {
     @Column(name="is_enabled")
     private boolean isEnabled;
 
+    @Column(name = "mfa_token")
+    private Integer MFAToken;
+
+    @Column(name = "mfa_expiry_date")
+    private LocalDateTime MFATokenExpiryDate;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Authority authority = this.getAuthority();
@@ -84,4 +91,15 @@ public class User implements UserDetails {
         return true;
     }
 
+
+    public User(Integer id, String email, String name, String surname, String telephoneNumber, String password, Authority authority, boolean isEnabled) {
+        this.id = id;
+        this.email = email;
+        this.name = name;
+        this.surname = surname;
+        this.telephoneNumber = telephoneNumber;
+        this.password = password;
+        this.authority = authority;
+        this.isEnabled = isEnabled;
+    }
 }

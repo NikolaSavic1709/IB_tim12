@@ -12,7 +12,7 @@ export class CertificateServiceService {
   constructor(private http: HttpClient) { }
 
   getCertificates(): Observable<CertificatePage> {
-    return this.http.get<CertificatePage>(environment.apiHost + "/api/certificate");
+    return this.http.get<CertificatePage>(environment.apiHost + "certificate");
   }
 
   downloadCertificate(serialNumber:string):Observable<any>{

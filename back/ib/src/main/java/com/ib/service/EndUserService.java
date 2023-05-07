@@ -6,16 +6,14 @@ import com.ib.exception.*;
 import com.ib.model.users.*;
 import com.ib.repository.users.IEndUserRepository;
 import com.ib.repository.users.IPasswordResetTokenRepository;
-import com.ib.repository.users.IUserActivationRepository;
+import com.ib.repository.users.IUserRepository;
 import com.ib.service.users.interfaces.IUserActivationService;
 import com.sendgrid.*;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import jakarta.persistence.EntityNotFoundException;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -45,24 +43,28 @@ public class EndUserService {
     private final AuthorityService authorityService;
     private final PasswordEncoder passwordEncoder;
     private final IEndUserRepository endUserRepository;
+
+    private final IUserRepository userRepository;
     private final IPasswordResetTokenRepository passwordResetTokenRepository;
     private final IUserActivationService userActivationService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Autowired
     public EndUserService(AuthorityService authorityService, PasswordEncoder passwordEncoder, IEndUserRepository endUserRepository,
-                          IPasswordResetTokenRepository passwordResetTokenRepository, IUserActivationService userActivationService) {
+                          IUserRepository userRepository, IPasswordResetTokenRepository passwordResetTokenRepository, IUserActivationService userActivationService) {
         this.authorityService = authorityService;
         this.passwordEncoder = passwordEncoder;
         this.endUserRepository = endUserRepository;
+        this.userRepository = userRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.userActivationService = userActivationService;
         this.bCryptPasswordEncoder = new BCryptPasswordEncoder();
+
     }
 
     public boolean checkUserEnabled(String email) {
-        EndUser user = endUserRepository.findByEmail(email);
-        Boolean enabled = endUserRepository.findEnabledByEmail(email);
+        User user = userRepository.findByEmail(email).orElseGet(null);;
+        Boolean enabled = userRepository.findEnabledByEmail(email);
         return user != null && enabled;
     }
 
@@ -104,10 +106,10 @@ public class EndUserService {
     public void sendMFAToken(String email, String mfaType) throws MailSendingException, SMSSendingException {
         Integer mfaToken = generateToken();
 
-        EndUser user = endUserRepository.findByEmail(email);
+        User user = userRepository.findByEmail(email).orElseGet(null);
         user.setMFAToken(mfaToken);
         user.setMFATokenExpiryDate(LocalDateTime.now().plusMinutes(5));
-        user = save(user);
+        user = userRepository.save(user);
         if (mfaType.equals("email")){
             try {
                 sendMail(user, mfaToken);
@@ -124,19 +126,19 @@ public class EndUserService {
         }
     }
 
-    public void sendSMS(EndUser user, Integer mfaToken){
+    public void sendSMS(User user, Integer mfaToken){
         Message message = Message.creator(new PhoneNumber(user.getTelephoneNumber()),
                 new PhoneNumber(OUTGOING_SMS_NUMBER),
                 constructSMSMessage(mfaToken,user)).create();
     }
 
-    private String constructSMSMessage(Integer token, EndUser user)  {
+    private String constructSMSMessage(Integer token, User user)  {
         return "Hello " + user.getName() + ","
                 + "Your MFA code is: " + token;
     }
 
 
-    public void sendMail(EndUser user, Integer activationToken) throws IOException, MailSendingException {
+    public void sendMail(User user, Integer activationToken) throws IOException, MailSendingException {
         Email from = new Email(EMAIL_SENDER, "IB Support");
         String subject = "MFA sign in";
         Email to = new Email(user.getEmail());
@@ -159,13 +161,13 @@ public class EndUserService {
         Random rnd = new Random();
         return 100000 + rnd.nextInt(900000);
     }
-    private String constructEmailContent(Integer token, EndUser user)  {
+    private String constructEmailContent(Integer token, User user)  {
         return "<p>Hello " + user.getName() + ",</p>"
                 + "<p>Your MFA code is: <b>" + token + "</b></p>";
     }
 
     public void checkMFA(String email, Integer token) throws InvalidUserException, UserMFAExpiredException {
-        EndUser user = endUserRepository.findByEmail(email);
+        User user = userRepository.findByEmail(email).orElseGet(null);
         if (user==null)
             throw new InvalidUserException("Invalid user");
         if (!user.getMFAToken().equals(token))
@@ -175,13 +177,13 @@ public class EndUserService {
 
         user.setMFATokenExpiryDate(null);
         user.setMFAToken(null);
-        save(user);
+        userRepository.save(user);
     }
 
     public void forgotPassword(ForgotPasswordDTO forgotPasswordDTO) throws MailSendingException, SMSSendingException, EntityNotFoundException {
 
         if (forgotPasswordDTO.getActivationType().equals("email")){
-            EndUser user = endUserRepository.findByEmail(forgotPasswordDTO.getActivationResource());
+            User user = userRepository.findByEmail(forgotPasswordDTO.getActivationResource()).orElseGet(null);
             PasswordResetToken token = updatePasswordResetToken(user);
             try {
                 sendForgotPasswordMail(user, token.getToken());
@@ -200,7 +202,7 @@ public class EndUserService {
         }
     }
 
-    private PasswordResetToken updatePasswordResetToken(EndUser user) {
+    private PasswordResetToken updatePasswordResetToken(User user) {
         PasswordResetToken token = new PasswordResetToken();
         token.setUser(user);
         token.setToken(generateToken());
@@ -210,19 +212,19 @@ public class EndUserService {
         return passwordResetTokenRepository.save(token);
     }
 
-    public void sendForgotPasswordSMS(EndUser user, Integer mfaToken){
+    public void sendForgotPasswordSMS(User user, Integer mfaToken){
         Message message = Message.creator(new PhoneNumber(user.getTelephoneNumber()),
                 new PhoneNumber(OUTGOING_SMS_NUMBER),
                 constructForgotPasswordSMSMessage(mfaToken,user)).create();
     }
 
-    private String constructForgotPasswordSMSMessage(Integer token, EndUser user)  {
+    private String constructForgotPasswordSMSMessage(Integer token, User user)  {
         return "Hello " + user.getName() + ","
                 + "Your code for password reset is: " + token;
     }
 
 
-    public void sendForgotPasswordMail(EndUser user, Integer activationToken) throws IOException, MailSendingException {
+    public void sendForgotPasswordMail(User user, Integer activationToken) throws IOException, MailSendingException {
         Email from = new Email(EMAIL_SENDER, "IB Support");
         String subject = "Forgot password";
         Email to = new Email(user.getEmail());
@@ -241,7 +243,7 @@ public class EndUserService {
         }
 
     }
-    private String constructForgotPasswordEmailContent(Integer token, EndUser user)  {
+    private String constructForgotPasswordEmailContent(Integer token, User user)  {
         return "<p>Hello " + user.getName() + ",</p>"
                 + "<p>Your code for password reset is: <b>" + token + "</b></p>";
     }
@@ -252,12 +254,12 @@ public class EndUserService {
             throw new IncorrectCodeException("Code is expired or not correct!");
         }
 
-        EndUser user;
+        User user;
         if (resetPasswordDTO.getActivationType().equals("email")){
-            user = endUserRepository.findByEmail(resetPasswordDTO.getActivationResource());
+            user = userRepository.findByEmail(resetPasswordDTO.getActivationResource()).orElseGet(null);
         }
         else {
-            user = endUserRepository.findByTelephoneNumber(resetPasswordDTO.getActivationResource());
+            user = userRepository.findByTelephoneNumber(resetPasswordDTO.getActivationResource());
         }
 
         if (user==null || user!=passwordResetToken.getUser()){
@@ -269,9 +271,9 @@ public class EndUserService {
         updatePassword(user, resetPasswordDTO.getNewPassword());
     }
 
-    private void updatePassword(EndUser user, String newPassword) {
+    private void updatePassword(User user, String newPassword) {
         user.setPassword(bCryptPasswordEncoder.encode(newPassword));
-        save(user);
+        userRepository.save(user);
 
         passwordResetTokenRepository.deleteAllByUser(user);
     }

@@ -32,7 +32,7 @@ public class CertificateController {
 
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getAllValid() {
+    public ResponseEntity<?> getAll() {
 
         List<CertificateDTO> certificateDTOs = certificateService.getAll().parallelStream()
 //                .filter(certificate -> certificate.getStatus().equals(CertificateStatus.VALID))

@@ -8,16 +8,15 @@ import { AuthService } from './service/auth-service/auth.service';
 })
 export class AppComponent {
   title = 'ib';
-  authenticated = false;
 
   constructor(private authService: AuthService) {}
 
-  ngOnInit() {
-    this.authenticated = this.authService.isLoggedIn();
+  isAuthenticated() {
+    return this.authService.isLoggedIn();
   }
   
   logout() {
     localStorage.removeItem("user");
-    this.authenticated = false;
+    this.authService.logout();
   }
 }

@@ -59,6 +59,7 @@ export class AuthService {
       headers: this.headers,
     }).subscribe({
       next: (result) => {
+        console.log(result.accessToken);
         localStorage.setItem('user', JSON.stringify(result.accessToken));
         this.setUser();
 

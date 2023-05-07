@@ -28,11 +28,14 @@ public class CertificateDTO {
 
     private String email;
 
+    private String serialNumber;
+
     public CertificateDTO(Certificate certificate)
     {
         this.email=certificate.getEmail();
         this.startDate=certificate.getStartDate();
         this.endDate=certificate.getEndDate();
         this.type=certificate.getType();
+        this.serialNumber = certificate.getSerialNumber();
     }
 }
