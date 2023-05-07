@@ -31,6 +31,7 @@ import { PasswordChangedComponent } from './components/password-changed/password
 import { VerifyAccountComponent } from './components/verify-account/verify-account.component';
 import { EmailForForgotPasswordComponent } from './components/email-for-forgot-password/email-for-forgot-password.component';
 import { TwoFactorAuthComponent } from './components/two-factor-auth/two-factor-auth.component';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 @NgModule({
   declarations: [
@@ -60,6 +61,7 @@ import { TwoFactorAuthComponent } from './components/two-factor-auth/two-factor-
     MatInputModule,
     MatTableModule,
     MatCheckboxModule,
+    MatSnackBarModule,
     HttpClientModule,
     MatDialogModule,
     MatOptionModule,

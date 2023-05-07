@@ -3,6 +3,8 @@ import { CertificateResponse } from '../../model/CertificateResponse';
 import { CertificateServiceService } from '../../service/certificate-service.service';
 import {MatTableDataSource} from '@angular/material/table';
 import {SelectionModel} from '@angular/cdk/collections';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { saveAs } from 'file-saver';
 
 
 @Component({
@@ -17,7 +19,7 @@ export class MainPageComponent implements OnInit{
   dataSource = new MatTableDataSource<CertificateResponse>();
   selection = new SelectionModel<CertificateResponse>(true, []);
 
-  constructor(private certificateService: CertificateServiceService) { }
+  constructor(private certificateService: CertificateServiceService, private snackBar: MatSnackBar) { }
 
   ngOnInit() {
 
@@ -40,5 +42,59 @@ export class MainPageComponent implements OnInit{
     this.isAllSelected() ?
         this.selection.clear() :
         this.dataSource.data.forEach(row => this.selection.select(row));
+  }
+  download(){
+    let serialNumber="96065034179050385728576056370750113417877590951777162458597610369742001313703";
+    this.certificateService.downloadCertificate(serialNumber).subscribe({
+      next: (res) => {
+        const file = new Blob([res], { type: 'application/x-x509-ca-cert' });
+        saveAs(file, serialNumber+'.crt');
+        this.snackBar.open('Successfull download', 'Close', {
+          duration: 3000,
+          verticalPosition: 'bottom',
+          horizontalPosition: 'center',
+        });
+      },
+    });
+  }
+
+  onFileSelected(event: any) {
+    if (event!=null && event.target!=null)
+    {
+      const target= event.target as HTMLInputElement;
+      if (target.files!=null && target.files.length == 1) {
+        const file = target.files[0];
+        console.log("pozvao servis");
+        this.certificateService.uploadCertificate(file).subscribe({
+            next: (res) => {
+              
+              this.snackBar.open('Valid', 'Close', {
+                duration: 3000,
+                verticalPosition: 'bottom',
+                horizontalPosition: 'center',
+              });
+            },
+            error:(error)=>{
+              this.snackBar.open('Not valid', 'Close', {
+                duration: 3000,
+                verticalPosition: 'bottom',
+                horizontalPosition: 'center',
+              });
+            }
+          });
+      } else {
+        this.snackBar.open('Error', 'Close', {
+          duration: 3000,
+          verticalPosition: 'bottom',
+          horizontalPosition: 'center',
+        });
+      }
+    }
+
+  }
+  
+  onUploadButtonClick() {
+    const fileInputElement = document.getElementById('fileInput') as HTMLInputElement;
+    fileInputElement.click();
   }
 }

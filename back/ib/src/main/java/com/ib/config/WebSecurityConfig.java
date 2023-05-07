@@ -69,6 +69,7 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/loginMFA").permitAll()
                 .requestMatchers("/api/forgotPassword").permitAll()
                 .requestMatchers("/api/resetPassword").permitAll()
+
 //        http.authorizeHttpRequests().requestMatchers("/**").permitAll()
                 // za svaki drugi zahtev korisnik mora biti autentifikovan
                 .anyRequest().authenticated().and()
