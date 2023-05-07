@@ -1,0 +1,25 @@
+<div id="background">
+    <div id="container">
+        <div class="holder" *ngIf="!hasError">
+
+            <span id="mail-icon" class="iconify" data-icon="ic:round-mark-email-read"></span>
+
+            <h1>Your account has been successfully verified</h1>
+            <h3>You can now log in to your Ihor account.</h3>
+
+        </div>
+
+        <div *ngIf="hasError" class="invalid holder">
+
+            <span id="mail-icon-error" class="iconify" data-icon="mdi:email-alert"></span>
+
+            <h1>Your activation has expired or you have an invalid token</h1>
+            <h3>Check your activation again.</h3>
+
+        </div>
+
+        <button type="button" id="loginbtn" (click)="toLogin()">Continue to Log in</button>
+
+    </div>
+    
+</div>

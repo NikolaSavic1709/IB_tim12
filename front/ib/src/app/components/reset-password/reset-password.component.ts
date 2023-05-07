@@ -1,0 +1,77 @@
+import { Component } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { match } from '../register/register.component';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ResetPasswordDTO, ResetService } from 'src/app/service/reset.service';
+import { HttpErrorResponse } from '@angular/common/http';
+
+@Component({
+  selector: 'app-reset-password',
+  templateUrl: './reset-password.component.html',
+  styleUrls: ['./reset-password.component.scss']
+})
+export class ResetPasswordComponent {
+  hasError: boolean;
+  token: number;
+  activationType:string|null|undefined;
+  activationResource:string|null|undefined;
+  hidePassword = true;
+  hideConfirmPassword = true;
+
+  reset = new FormGroup({
+    token: new FormControl('', [Validators.minLength(6),Validators.maxLength(6), Validators.required]),
+    password: new FormControl('', [Validators.minLength(8), Validators.required]),
+    confirmPassword: new FormControl('', [Validators.required]),
+  }, {validators: [match('password', 'confirmPassword')]});
+
+
+  constructor(private router: Router,
+              private route: ActivatedRoute,
+              private resetService: ResetService) {
+    this.token = 0;
+    this.activationResource='';
+    this.activationType='';
+    this.hasError = false;
+  }
+
+  ngOnInit(): void {
+    // this.route.queryParams
+    //   .subscribe(params => {
+    //       // this.token = params['token'];
+    //       this.activationType = params['type'];
+    //       this.activationResource = params['resource'];
+    //     }
+    //   );
+    this.activationType = this.resetService.type;
+    this.activationResource = this.resetService.resource;
+  }
+
+  toChange() {
+    let token = Number(this.reset.value.token)
+    if (this.reset.valid && !isNaN(token) && this.activationType && this.activationResource) {
+      const resetPasswordDTO: ResetPasswordDTO = {
+        code: token,
+        newPassword: this.reset.value.password as string,
+        activationType: this.activationType,
+        activationResource: this.activationResource,
+
+      }
+      this.resetService.changePasswordWithResetCode(resetPasswordDTO).subscribe({
+        next: (result) => {
+          this.router.navigate(['/password-changed']);
+        },
+        error: (error) => {
+          if (error instanceof HttpErrorResponse) {
+            this.hasError = true;
+          }
+        },
+      });
+
+
+    }
+  }
+
+  toLogin() {
+    this.router.navigate(['/login']);
+  }
+}

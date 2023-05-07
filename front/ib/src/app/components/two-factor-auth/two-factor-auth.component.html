@@ -1,0 +1,32 @@
+<div id="background">
+    <div id="container">
+
+        <span id="lockicon" class="iconify" data-icon="mdi:lock-clock"></span>
+
+        <h1>Two-Factor Authentication</h1>
+        <form [formGroup]="verify" (ngSubmit)="toLoginMFA()">
+
+            <mat-form-field appearance="outline" id="code">
+                <mat-label>Verification Code</mat-label>
+                <input matInput type="text" placeholder="3453454" name="token" formControlName="token" required>
+                <mat-error *ngIf="verify.get('token')?.invalid && verify.get('token')?.touched" >
+                  <span *ngIf="verify.get('token')?.errors?.['token']" class="input-error" >Reset Code must be in correct format</span>
+                  <span *ngIf="verify.get('token')?.errors?.['required']" class="input-error" >Code is required</span>
+                </mat-error>
+              </mat-form-field>
+
+            <button type="submit" id="loginbtn">VERIFY</button>
+
+            <mat-error *ngIf="hasError" >
+              <span class="res-error" >Verification code expired!</span>
+            </mat-error>
+
+            <div id="toLogin">
+                <p>Back to </p>
+                <p id="login" (click)="toLogin()">Log in</p>
+            </div>
+
+        </form>
+
+    </div>
+</div>

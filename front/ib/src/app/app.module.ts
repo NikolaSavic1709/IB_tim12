@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatToolbarModule} from '@angular/material/toolbar';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatOptionModule } from '@angular/material/core';
+import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule} from '@angular/material/select';
 import { HttpClientModule } from '@angular/common/http';
 import {MatTableModule} from '@angular/material/table';
@@ -22,6 +23,14 @@ import { AuthInterceptor } from 'src/app/auth/auth.interceptor';
 import { RequestDialogComponent } from './dialog/request-dialog/request-dialog/request-dialog.component';
 import { LoginComponent } from './components/login/login.component';
 import { RegisterComponent } from './components/register/register.component';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { AccountActivatedComponent } from './components/account-activated/account-activated.component';
+import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
+import { PasswordChangedComponent } from './components/password-changed/password-changed.component';
+import { VerifyAccountComponent } from './components/verify-account/verify-account.component';
+import { EmailForForgotPasswordComponent } from './components/email-for-forgot-password/email-for-forgot-password.component';
+import { TwoFactorAuthComponent } from './components/two-factor-auth/two-factor-auth.component';
 
 @NgModule({
   declarations: [
@@ -30,7 +39,14 @@ import { RegisterComponent } from './components/register/register.component';
     RequestPageComponent,
     RequestDialogComponent,
     LoginComponent,
-    RegisterComponent
+    RegisterComponent,
+    AccountActivatedComponent,
+    ForgotPasswordComponent,
+    ResetPasswordComponent,
+    PasswordChangedComponent,
+    VerifyAccountComponent,
+    EmailForForgotPasswordComponent,
+    TwoFactorAuthComponent
   ],
   imports: [
     BrowserModule,
@@ -47,8 +63,9 @@ import { RegisterComponent } from './components/register/register.component';
     HttpClientModule,
     MatDialogModule,
     MatOptionModule,
-    MatSelectModule
-
+    MatSelectModule,
+    ReactiveFormsModule,
+    MatRadioModule
   ],
   providers: [
     {
