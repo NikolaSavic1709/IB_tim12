@@ -26,11 +26,8 @@ export class RequestPageComponent {
         next: (res) => {
           this.certificates = res;
           this.dataSource.data = this.certificates;
-
         },
       });
-
-
     }
   
     isAllSelected() {
