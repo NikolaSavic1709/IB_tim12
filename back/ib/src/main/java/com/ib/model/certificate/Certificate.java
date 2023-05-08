@@ -48,12 +48,19 @@ public class Certificate {
     @Column(name = "email")
     private String email;
 
-    public Certificate(String serialNumber, String signatureAlgorithm, String issuer, CertificateStatus status, CertificateType type, String email) {
+    @Column(name="is_revoked")
+    private boolean isRevoked;
+    @Column(name="revocation_reason")
+    private String revocationReason;
+
+    public Certificate(String serialNumber, String signatureAlgorithm, String issuer, CertificateStatus status, CertificateType type, String email, String revocationReason, boolean isRevoked) {
         this.serialNumber = serialNumber;
         this.signatureAlgorithm = signatureAlgorithm;
         this.issuer = issuer;
         this.status = status;
         this.type = type;
         this.email = email;
+        this.isRevoked=isRevoked;
+        this.revocationReason=revocationReason;
     }
 }

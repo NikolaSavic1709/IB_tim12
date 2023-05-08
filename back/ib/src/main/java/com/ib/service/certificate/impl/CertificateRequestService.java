@@ -10,6 +10,7 @@ import com.ib.repository.certificate.ICertificateRequestRepository;
 import com.ib.service.base.impl.JPAService;
 import com.ib.service.certificate.interfaces.ICertificateRequestService;
 import com.ib.service.certificate.interfaces.ICertificateService;
+import com.ib.service.certificate.interfaces.ICertificateValidationService;
 import com.ib.service.users.interfaces.IUserService;
 import com.ib.utils.TokenUtils;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,13 +28,15 @@ public class CertificateRequestService extends JPAService<CertificateRequest> im
     private final IUserService userService;
     private final TokenUtils tokenUtils;
     private final ICertificateService certificateService;
+    private final ICertificateValidationService certificateValidationService;
 
     @Autowired
-    public CertificateRequestService(ICertificateRequestRepository certificateRequestRepository, IUserService userService, TokenUtils tokenUtils, ICertificateService certificateService) {
+    public CertificateRequestService(ICertificateRequestRepository certificateRequestRepository, IUserService userService, TokenUtils tokenUtils, ICertificateService certificateService, ICertificateValidationService certificateValidationService) {
         this.certificateRequestRepository = certificateRequestRepository;
         this.userService = userService;
         this.tokenUtils = tokenUtils;
         this.certificateService = certificateService;
+        this.certificateValidationService = certificateValidationService;
     }
 
     @Override
@@ -83,7 +86,8 @@ public class CertificateRequestService extends JPAService<CertificateRequest> im
         Certificate issuerCert=new Certificate();
         if(requestCreation.getIssuer()!=null) {
             issuerCert = certificateService.getBySerialNumber(requestCreation.getIssuer());
-            if(issuerCert.getStatus().equals(CertificateStatus.INVALID))
+            // ili nije aktivan ili nije validan (povucen, istekao...)
+            if(issuerCert.getStatus().equals(CertificateStatus.INVALID) || !certificateValidationService.getAndCheck(requestCreation.getIssuer()))
                 throw new EntityNotFoundException("Invalid issuer");
         }
         Certificate certificateMetadata = certificateService.createCertificateMetadata(requestCreation);

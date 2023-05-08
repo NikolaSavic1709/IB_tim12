@@ -2,8 +2,12 @@ package com.ib.controller.certificate;
 
 import com.ib.DTO.CertificateDTO;
 import com.ib.DTO.ObjectListResponseDTO;
+import com.ib.exception.CertificateAlreadyRevokedException;
+import com.ib.exception.ForbiddenException;
+import com.ib.exception.InvalidUserException;
 import com.ib.model.certificate.CertificateStatus;
 import com.ib.service.certificate.interfaces.ICertificateService;
+import com.ib.service.certificate.interfaces.ICertificateValidationService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -17,8 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,15 +29,21 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "http://localhost:4200")
 public class CertificateController {
 
+    private final ICertificateService certificateService;
+    private final ICertificateValidationService certificateValidationService;
+
     @Autowired
-    private ICertificateService certificateService;
+    public CertificateController(ICertificateService certificateService, ICertificateValidationService certificateValidationService) {
+        this.certificateService = certificateService;
+        this.certificateValidationService = certificateValidationService;
+    }
 
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAll() {
 
         List<CertificateDTO> certificateDTOs = certificateService.getAll().parallelStream()
-//                .filter(certificate -> certificate.getStatus().equals(CertificateStatus.VALID))
+                .filter(certificate -> certificate.getStatus().equals(CertificateStatus.VALID))
                 .map(CertificateDTO::new).collect(Collectors.toList());
         ObjectListResponseDTO<CertificateDTO> objectListResponse = new ObjectListResponseDTO<>(certificateDTOs.size(), certificateDTOs);
         return new ResponseEntity<>(objectListResponse, HttpStatus.OK);
@@ -45,7 +53,7 @@ public class CertificateController {
     @GetMapping(value = "/validity/{serialNumber}")
     public ResponseEntity<?> validateCertificate(@PathVariable String serialNumber) {
         try {
-            boolean isValid = certificateService.getAndCheck(serialNumber);
+            boolean isValid = certificateValidationService.getAndCheck(serialNumber);
             return new ResponseEntity<>(isValid, HttpStatus.OK);
         }
         catch (EntityNotFoundException e)
@@ -58,7 +66,7 @@ public class CertificateController {
     @PostMapping(value = "/validity/file")
     public ResponseEntity<?> validateCertificateByCopy(@RequestParam("file") MultipartFile file) {
         try {
-            if(certificateService.checkByCopy(file))
+            if(certificateValidationService.checkByCopy(file))
                 return new ResponseEntity<>(HttpStatus.OK);
             else
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Not valid");
@@ -92,27 +100,31 @@ public class CertificateController {
             throw new RuntimeException(e);
         }
 
-        // Definišemo zaglavlja
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Disposition", String.format("attachment; filename=\"%s\"", file.getName()));
         headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
         headers.add("Expires", "0");
 
-        // Vraćamo odgovor sa datotekom i zaglavljima
         return ResponseEntity.ok()
                 .headers(headers)
                 .contentLength(file.length())
                 .contentType(MediaType.parseMediaType("application/octet-stream"))
                 .body(resource);
-//        try {
-////            CertificateDTO certificateDTO=new CertificateDTO(certificateService.getBySerialNumber(serialNumber));
-//            InputStream inputStream=getClass().getResourceAsStream("src/main/resources/certificates/"+serialNumber+".crt");
-////            return new ResponseEntity<>(certificateDTO, HttpStatus.OK);
-//            return new ResponseEntity<>(new InputStreamResource(inputStream),HttpStatus.OK);
-//        }
-//        catch (EntityNotFoundException e)
-//        {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-//        }
+    }
+
+    @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
+    @PostMapping(value = "/revoke/{serialNumber}")
+    public ResponseEntity<?> revokeCertificate(@PathVariable String serialNumber, @RequestBody String revocationReason, @RequestHeader("Authorization") String token)
+    {
+        try {
+            certificateValidationService.revokeCertificate(serialNumber,revocationReason, token);
+        } catch (ForbiddenException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (EntityNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (CertificateAlreadyRevokedException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

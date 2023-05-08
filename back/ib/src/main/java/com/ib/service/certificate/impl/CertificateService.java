@@ -64,55 +64,6 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         if(certificate.isEmpty()) throw new EntityNotFoundException();
         else return certificate.get();
     }
-    @Override
-    public boolean getAndCheck(String serialNumber) throws EntityNotFoundException{
-        Optional<Certificate> certificate= Optional.ofNullable(certificateRepository.findBySerialNumber(serialNumber));
-        if(certificate.isEmpty()) throw new EntityNotFoundException();
-        return isValid(certificate.get());
-    }
-    @Override
-    public boolean checkByCopy(MultipartFile file) throws IOException, CertificateException, EntityNotFoundException {
-        byte[] bytes = file.getBytes();
-        CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-
-        X509Certificate cert = (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(bytes));
-        String serialNumber= String.valueOf(cert.getSerialNumber());
-        return getAndCheck(serialNumber);
-
-    }
-    private boolean isValid(Certificate certificate){
-        if(!isDigitalSignatureValid(certificate) || isCertificateOutdated(certificate)) {
-            return false;
-        }
-        certificate.setStatus(CertificateStatus.VALID);
-        return true;
-    }
-    private boolean isDigitalSignatureValid(Certificate certificate){
-        try {
-            if (certificate.getIssuer()==null) return true;
-            X509Certificate cert=certificateFileStorage.getCertificateFromStorage(certificate.getSerialNumber());
-            X509Certificate issuerCert=certificateFileStorage.getCertificateFromStorage(certificate.getIssuer());
-
-            cert.verify(issuerCert.getPublicKey());
-            return true;
-        } catch (InvalidKeyException | CertificateException | NoSuchAlgorithmException | SignatureException | NoSuchProviderException e) {
-            return false;
-        }
-    }
-    private boolean isTrustedAuthority(Certificate certificate){
-        if(certificate.getType().equals(CertificateType.ROOT) || isValid(certificateRepository.findBySerialNumber(certificate.getIssuer())))
-            return true;
-        return false;
-
-    }
-    private boolean isCertificateRevoked(Certificate certificate){
-        // ova metoda se ne mora koristiti ako ce svaki put kada se povuce ili ponovo objavi sertifikat promeni fleg u bazi
-        return certificate.getStatus()==CertificateStatus.INVALID;
-    }
-    private boolean isCertificateOutdated(Certificate certificate){
-        LocalDateTime now = LocalDateTime.now();
-        return certificate.getStartDate().after(Date.from(now.atZone(ZoneId.systemDefault()).toInstant())) || certificate.getEndDate().before(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()));
-    }
 
     public X509Certificate generateCertificate(Certificate certificateRequest) throws ForbiddenException{
         try {
@@ -203,7 +154,9 @@ public class CertificateService extends JPAService<Certificate> implements ICert
                 requestCreation.getIssuer(),
                 CertificateStatus.INVALID,
                 requestCreation.getType(),
-                requestCreation.getEmail()
+                requestCreation.getEmail(),
+                "",
+                false
         );
         return save(certificateMetaData);
     }
