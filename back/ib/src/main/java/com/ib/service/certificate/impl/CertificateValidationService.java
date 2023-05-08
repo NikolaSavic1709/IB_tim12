@@ -2,9 +2,7 @@ package com.ib.service.certificate.impl;
 
 import com.ib.exception.CertificateAlreadyRevokedException;
 import com.ib.exception.ForbiddenException;
-import com.ib.exception.InvalidUserException;
 import com.ib.model.certificate.Certificate;
-import com.ib.model.certificate.CertificateStatus;
 import com.ib.model.certificate.CertificateType;
 import com.ib.repository.certificate.ICertificateRepository;
 import com.ib.service.CertificateFileStorage;
@@ -31,7 +29,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class CertificateValidationService implements ICertificateValidationService {
@@ -62,6 +59,7 @@ public class CertificateValidationService implements ICertificateValidationServi
 
         certificate.setRevoked(true);
         certificate.setRevocationReason(revocationReason);
+        certificateRepository.save(certificate);
         revokeAllSubordinates(certificate.getSerialNumber(),revocationReason);
 
     }
@@ -111,11 +109,12 @@ public class CertificateValidationService implements ICertificateValidationServi
         for(Certificate certificate: validSubordinates){
             certificate.setRevocationReason(revocationReason);
             certificate.setRevoked(true);
+            certificateRepository.save(certificate);
         }
     }
     private boolean isAncestor(Certificate certificate, String issuerSerialNumber)
     {
-        if(certificate.getIssuer().equals(certificate.getSerialNumber()))
+        if(certificate.getIssuer() == null)
             return false;
         if(certificate.getIssuer().equals(issuerSerialNumber))
             return true;

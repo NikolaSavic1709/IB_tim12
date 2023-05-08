@@ -19,6 +19,11 @@ export class CertificateServiceService {
     return this.http.get('http://localhost:8080/api/certificate/file/'+serialNumber, { responseType: 'blob' });
 
   }
+  validateById(serialNumber:string):Observable<any>{
+
+    return this.http.get('http://localhost:8080/api/certificate/validity/' + serialNumber);
+  }
+
   uploadCertificate(file:File):Observable<any>{
 
     const formData = new FormData();
@@ -26,6 +31,12 @@ export class CertificateServiceService {
 
     return this.http.post('http://localhost:8080/api/certificate/validity/file', formData);
   }
+
+  revokeCertificate(serialNumber:string, revocationReason:string):Observable<any>{
+
+    return this.http.post('http://localhost:8080/api/certificate/revoke/' +  serialNumber, revocationReason);
+  }
+
   ngOnInit() {
     
   }

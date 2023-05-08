@@ -1,9 +1,9 @@
 <div class="table-header">
   <span style="font-size: 20px; font-weight: 500;">Certificates</span>
   <span style="font-size: 16px;">Total selected: {{selection.selected.length}}</span>
-  <button mat-raised-button>DELETE</button>
+  <button (click)="openForm()" mat-raised-button>REVOKE</button>
   <button  (click)="download()" mat-raised-button>DOWNLOAD</button>
-  <button mat-raised-button>VALIDATE WITH ID</button>
+  <button (click)="validateWithId()" mat-raised-button>VALIDATE WITH ID</button>
   <button (click)="onUploadButtonClick()" mat-raised-button>VALIDATE BY UPLOAD</button>
   <input id="fileInput" type="file" style="display:none" (change)="onFileSelected($event)">
 

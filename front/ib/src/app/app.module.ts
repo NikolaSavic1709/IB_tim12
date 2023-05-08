@@ -32,6 +32,7 @@ import { VerifyAccountComponent } from './components/verify-account/verify-accou
 import { EmailForForgotPasswordComponent } from './components/email-for-forgot-password/email-for-forgot-password.component';
 import { TwoFactorAuthComponent } from './components/two-factor-auth/two-factor-auth.component';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { RevokeDialogComponent } from './dialog/revoke-dialog/revoke-dialog/revoke-dialog.component';
 
 @NgModule({
   declarations: [
@@ -47,7 +48,8 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
     PasswordChangedComponent,
     VerifyAccountComponent,
     EmailForForgotPasswordComponent,
-    TwoFactorAuthComponent
+    TwoFactorAuthComponent,
+    RevokeDialogComponent
   ],
   imports: [
     BrowserModule,

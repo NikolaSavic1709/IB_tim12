@@ -5,6 +5,8 @@ import {MatTableDataSource} from '@angular/material/table';
 import {SelectionModel} from '@angular/cdk/collections';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { saveAs } from 'file-saver';
+import { MatDialog, MatDialogConfig, MatDialogRef } from '@angular/material/dialog';
+import { RevokeDialogComponent } from 'src/app/dialog/revoke-dialog/revoke-dialog/revoke-dialog.component';
 
 
 @Component({
@@ -19,7 +21,7 @@ export class MainPageComponent implements OnInit{
   dataSource = new MatTableDataSource<CertificateResponse>();
   selection = new SelectionModel<CertificateResponse>(true, []);
 
-  constructor(private certificateService: CertificateServiceService, private snackBar: MatSnackBar) { }
+  constructor(private certificateService: CertificateServiceService, private snackBar: MatSnackBar, private matDialog: MatDialog) { }
 
   ngOnInit() {
 
@@ -94,9 +96,51 @@ export class MainPageComponent implements OnInit{
     }
 
   }
+
+  validateWithId() {
+    this.selection.selected.forEach(cert => {
+      let serialNumber = cert.serialNumber;
+      this.certificateService.validateById(serialNumber).subscribe({
+        next: (res) => {
+              
+          this.snackBar.open(res, 'Close', {
+            duration: 3000,
+            verticalPosition: 'bottom',
+            horizontalPosition: 'center',
+          });
+        },
+        error:(error)=>{
+          this.snackBar.open('Not valid', 'Close', {
+            duration: 3000,
+            verticalPosition: 'bottom',
+            horizontalPosition: 'center',
+          });
+        }
+      });
+    })
+  }
   
   onUploadButtonClick() {
     const fileInputElement = document.getElementById('fileInput') as HTMLInputElement;
     fileInputElement.click();
+  }
+
+  openForm() {
+    let selectedCertificates = this.selection.selected;
+    let dialogRef: MatDialogRef<RevokeDialogComponent>;
+
+    const openNextForm = (certIndex: number) => {
+      if (certIndex < selectedCertificates.length) {
+        const dialogConfig = new MatDialogConfig();
+        dialogConfig.width = "300px"; 
+        dialogConfig.data = selectedCertificates[certIndex].serialNumber;
+        
+        dialogRef = this.matDialog.open(RevokeDialogComponent, dialogConfig);
+        dialogRef.afterClosed().subscribe(() => {
+          openNextForm(certIndex + 1);
+        });
+      }
+    };
+    openNextForm(0);
   }
 }
