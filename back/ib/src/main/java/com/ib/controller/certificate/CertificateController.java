@@ -23,6 +23,7 @@ import java.io.*;
 import java.security.cert.CertificateException;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.zip.ZipOutputStream;
 
 @RestController
 @RequestMapping(value = "api/certificate")
@@ -91,26 +92,22 @@ public class CertificateController {
 
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @GetMapping(value = "/file/{serialNumber}")
-    public ResponseEntity<?> getFileBySerialNumber(@PathVariable String serialNumber) {
-        File file = new File("src/main/resources/certificates/"+serialNumber+".crt");
-        InputStreamResource resource = null;
-        try {
-            resource = new InputStreamResource(new FileInputStream(file));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+    public ResponseEntity<?> getFilesBySerialNumber(@PathVariable String serialNumber, @RequestHeader("Authorization") String token) {
+        byte[] zipBytes = certificateService.getCertificatesInZip(serialNumber, token);
+        InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(zipBytes));
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", String.format("attachment; filename=\"%s\"", file.getName()));
+        headers.add("Content-Disposition", String.format("attachment; filename=\"%s.zip\"", serialNumber));
         headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
         headers.add("Expires", "0");
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .contentLength(file.length())
-                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .contentLength(zipBytes.length)
+                .contentType(MediaType.parseMediaType("application/zip"))
                 .body(resource);
     }
+
 
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @PostMapping(value = "/revoke/{serialNumber}")

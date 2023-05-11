@@ -50,8 +50,8 @@ export class MainPageComponent implements OnInit{
       let serialNumber = cert.serialNumber;
       this.certificateService.downloadCertificate(serialNumber).subscribe({
         next: (res) => {
-          const file = new Blob([res], { type: 'application/x-x509-ca-cert' });
-          saveAs(file, serialNumber+'.crt');
+          const file = new Blob([res], { type: 'application/zip' });
+          saveAs(file, serialNumber+'.zip');
           this.snackBar.open('Successfull download', 'Close', {
             duration: 3000,
             verticalPosition: 'bottom',

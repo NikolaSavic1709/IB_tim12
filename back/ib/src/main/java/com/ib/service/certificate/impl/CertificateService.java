@@ -11,26 +11,27 @@ import com.ib.service.CertificateFileStorage;
 import com.ib.service.base.impl.JPAService;
 import com.ib.service.certificate.interfaces.ICertificateService;
 import com.ib.service.users.impl.UserService;
+import com.ib.utils.TokenUtils;
 import jakarta.persistence.EntityNotFoundException;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -39,19 +40,23 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class CertificateService extends JPAService<Certificate> implements ICertificateService {
 
-    @Autowired
-    private ICertificateRepository certificateRepository;
+    private final ICertificateRepository certificateRepository;
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @Autowired
-    private CertificateFileStorage certificateFileStorage;
+    private final CertificateFileStorage certificateFileStorage;
+    private final TokenUtils tokenUtils;
+
+    public CertificateService(ICertificateRepository certificateRepository, UserService userService, CertificateFileStorage certificateFileStorage, TokenUtils tokenUtils) {
+        this.certificateRepository = certificateRepository;
+        this.userService = userService;
+        this.certificateFileStorage = certificateFileStorage;
+        this.tokenUtils = tokenUtils;
+    }
 
     @Override
     protected JpaRepository<Certificate, Integer> getEntityRepository() {
@@ -159,6 +164,41 @@ public class CertificateService extends JPAService<Certificate> implements ICert
                 false
         );
         return save(certificateMetaData);
+    }
+
+    @Override
+    public byte[] getCertificatesInZip(String serialNumber, String authHeader)  throws EntityNotFoundException{
+        Certificate certificate=getBySerialNumber(serialNumber);
+        String token = authHeader.substring(7);
+        File certFile = new File("src/main/resources/certificates/"+serialNumber+".crt");
+        File keyFile = new File("src/main/resources/certificates/"+serialNumber+".key");
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
+            addToZip(certFile, zipOutputStream, "certificate.crt");
+            if (Objects.equals(tokenUtils.getEmailFromToken(token), certificate.getEmail()))
+                addToZip(keyFile, zipOutputStream, "certificate.key");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    private void addToZip(File file, ZipOutputStream zipOutputStream, String fileName) throws IOException {
+        ZipEntry zipEntry = new ZipEntry(fileName);
+        zipEntry.setSize(file.length());
+        zipOutputStream.putNextEntry(zipEntry);
+
+        FileInputStream fileInputStream = new FileInputStream(file);
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+            zipOutputStream.write(buffer, 0, bytesRead);
+        }
+
+        fileInputStream.close();
+        zipOutputStream.closeEntry();
     }
 
     private static KeyPair generateKeyPair() {

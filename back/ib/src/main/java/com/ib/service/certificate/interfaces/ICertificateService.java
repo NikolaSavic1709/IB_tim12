@@ -10,6 +10,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import com.ib.service.base.interfaces.IJPAService;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ICertificateService extends IJPAService<Certificate> {
@@ -21,4 +22,5 @@ public interface ICertificateService extends IJPAService<Certificate> {
 
     Certificate createCertificateMetadata(RequestCreationDTO requestCreation);
 
-    }
+    byte[] getCertificatesInZip(String serialNumber, String authHeader);
+}
