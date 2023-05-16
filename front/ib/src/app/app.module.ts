@@ -34,6 +34,7 @@ import { TwoFactorAuthComponent } from './components/two-factor-auth/two-factor-
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { RevokeDialogComponent } from './dialog/revoke-dialog/revoke-dialog/revoke-dialog.component';
 import { RenewPasswordComponent } from './components/renew-password/renew-password.component';
+import { RejectDialogComponent } from './dialog/reject-dialog/reject-dialog.component';
 
 @NgModule({
   declarations: [
@@ -51,7 +52,8 @@ import { RenewPasswordComponent } from './components/renew-password/renew-passwo
     EmailForForgotPasswordComponent,
     TwoFactorAuthComponent,
     RevokeDialogComponent,
-    RenewPasswordComponent
+    RenewPasswordComponent,
+    RejectDialogComponent
   ],
   imports: [
     BrowserModule,

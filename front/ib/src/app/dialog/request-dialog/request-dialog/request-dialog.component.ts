@@ -66,6 +66,9 @@ export class RequestDialogComponent {
       email: email
     }
 
+    if (request.issuer == "") {
+      request.issuer = null;
+    }
     this.requestService.sendRequest(request).subscribe({
       next: (res) => {
         this.dialogRef.close();

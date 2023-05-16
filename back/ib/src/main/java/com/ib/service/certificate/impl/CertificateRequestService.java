@@ -113,8 +113,9 @@ public class CertificateRequestService extends JPAService<CertificateRequest> im
     }
 
     @Override
-    public Certificate acceptRequest(CertificateRequest certificateRequest, String token) throws ForbiddenException {
-        Certificate newCertificate = certificateRequest.getCertificate();
+    public Certificate acceptRequest(String serialNumber, String token) throws ForbiddenException {
+        Certificate newCertificate = certificateService.getBySerialNumber(serialNumber);
+        CertificateRequest certificateRequest = certificateRequestRepository.findByCertificate(newCertificate).orElse(null);
         X509Certificate certificate = certificateService.generateCertificate(newCertificate);
         if (certificate != null && certificateRequest.getStatus().equals(RequestStatus.PENDING) ) {
             if ( certificateService.getOwnerOfCertificate(newCertificate.getIssuer()).equals(tokenUtils.getEmailFromToken(token.substring(7)))) {
@@ -124,20 +125,22 @@ public class CertificateRequestService extends JPAService<CertificateRequest> im
                 certificateRequestRepository.save(certificateRequest);
                 return newCertificate;
             }
-        }
+        } else throw new ForbiddenException("Status is not PENDING!");
+
         return null;
     }
 
     @Override
-    public void rejectRequest(Integer id, String rejectionReason, String token) {
-        CertificateRequest rejectedRequest = certificateRequestRepository.findById(id).orElse(null);
+    public void rejectRequest(String serialNumber, String rejectionReason, String token) throws ForbiddenException {
+        Certificate newCertificate = certificateService.getBySerialNumber(serialNumber);
+        CertificateRequest rejectedRequest = certificateRequestRepository.findByCertificate(newCertificate).orElse(null);
         if (rejectedRequest != null && rejectedRequest.getStatus().equals(RequestStatus.PENDING)) {
             if (certificateService.getOwnerOfCertificate(rejectedRequest.getCertificate().getIssuer()).equals(tokenUtils.getEmailFromToken(token.substring(7)))) {
                 rejectedRequest.setRejectionReason(rejectionReason);
                 rejectedRequest.setStatus(RequestStatus.REJECTED);
                 certificateRequestRepository.save(rejectedRequest);
-            }
-        }
+            } else throw new ForbiddenException("Status is not PENDING!");
+        }else throw new ForbiddenException("Status is not PENDING!");
     }
 }
 

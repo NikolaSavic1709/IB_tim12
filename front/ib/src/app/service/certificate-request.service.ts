@@ -22,6 +22,13 @@ export class CertificateRequestService {
     return this.http.post<CertificateRequest>(environment.apiHost + "request/create", CreateCertificate);
   }
 
+  rejectRequest(serialNumber:string, rejectionReason:string):Observable<any>{
+    return this.http.post('http://localhost:8080/api/request/reject/' +  serialNumber, rejectionReason);
+  }
+
+  acceptRequest(serialNumber: string): Observable<any> {
+    return this.http.put('http://localhost:8080/api/request/accept/' +  serialNumber, "");
+  }
   ngOnInit() {
     
   }
