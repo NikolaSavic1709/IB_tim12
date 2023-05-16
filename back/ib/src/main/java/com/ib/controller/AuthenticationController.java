@@ -189,7 +189,7 @@ public class AuthenticationController {
             endUserService.renewPassword(renewPasswordDTO);
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Password successfully changed!");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email or old password incorrect!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 }

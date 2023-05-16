@@ -53,11 +53,17 @@ export class RenewPasswordComponent {
         },
         error: (error) => {
           if (error instanceof HttpErrorResponse) {
-            this.snackBar.open('E-mail or password incorrect', 'Close', {
-              duration: 3000,
-              verticalPosition: 'bottom',
-              horizontalPosition: 'center',
-            });
+            const errorCode = error.status;
+
+            if (errorCode === 400) {
+                this.hasError = true;
+            } else {
+              this.snackBar.open('E-mail or password incorrect', 'Close', {
+                duration: 3000,
+                verticalPosition: 'bottom',
+                horizontalPosition: 'center',
+              });
+            }
           }
         },
       });

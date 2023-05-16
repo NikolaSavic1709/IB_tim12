@@ -278,20 +278,22 @@ public class EndUserService {
     private void updatePassword(User user, String newPassword) {
         user.setPassword(bCryptPasswordEncoder.encode(newPassword));
         user.setLastPasswordResetDate(LocalDateTime.now());
+        user.addPassword(bCryptPasswordEncoder.encode(newPassword));
         userRepository.save(user);
 
         passwordResetTokenRepository.deleteAllByUser(user);
     }
 
-    public void renewPassword(RenewPasswordDTO renewPasswordDTO) throws PasswordNotMatchingException, EntityNotFoundException {
+    public void renewPassword(RenewPasswordDTO renewPasswordDTO) throws PasswordNotMatchingException, EntityNotFoundException, PasswordAlreadyUsedException {
         User user = userRepository.findByEmail(renewPasswordDTO.getEmail()).orElse(null);
 
         if (user == null) throw new EntityNotFoundException();
         //if (user == null) throw new UserDoesNotExistException();
         if (passwordEncoder.matches(renewPasswordDTO.getOldPassword(),user.getPassword())) {
-            user.setPassword(passwordEncoder.encode(renewPasswordDTO.getNewPassword()));
-            user.setLastPasswordResetDate(LocalDateTime.now());
-            userRepository.save(user);
+            for (String pass : user.getPasswordHistory()) {
+                if (passwordEncoder.matches(renewPasswordDTO.getNewPassword(),pass)) throw new PasswordAlreadyUsedException();
+            }
+            updatePassword(user, renewPasswordDTO.getNewPassword());
         } else {
             throw new PasswordNotMatchingException();
         }

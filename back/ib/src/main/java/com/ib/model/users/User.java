@@ -81,6 +81,11 @@ public class User implements UserDetails {
     @Column(name = "last_password_reset_date")
     private LocalDateTime lastPasswordResetDate;
 
+    @Column(name= "previous_passwords")
+    @ElementCollection
+    @CollectionTable(name = "password", joinColumns = @JoinColumn(name = "user_id"))
+    private List<String> passwordHistory;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Authority authority = this.getAuthority();
@@ -124,5 +129,10 @@ public class User implements UserDetails {
         this.password = password;
         this.authority = authority;
         this.isEnabled = isEnabled;
+        this.passwordHistory = new ArrayList<String>();
+    }
+
+    public void addPassword(String password) {
+        this.passwordHistory.add(password);
     }
 }
