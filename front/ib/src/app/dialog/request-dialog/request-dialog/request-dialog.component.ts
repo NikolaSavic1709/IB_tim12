@@ -1,9 +1,10 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, SecurityContext } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { AuthService } from 'src/app/service/auth-service/auth.service';
 import { CertificateRequestService } from 'src/app/service/certificate-request.service';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { CreateCertificate } from 'src/app/model/CreateCertificate';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 
 @Component({
@@ -20,7 +21,7 @@ export class RequestDialogComponent {
     certificateType: new FormControl('', [Validators.required, Validators.minLength(1)])
   });
 
-  constructor(public dialogRef: MatDialogRef<RequestDialogComponent>, public requestService: CertificateRequestService, public authService: AuthService) {}
+  constructor(private sanitizer: DomSanitizer, public dialogRef: MatDialogRef<RequestDialogComponent>, public requestService: CertificateRequestService, public authService: AuthService) {}
 
   closeDialog() {
     this.dialogRef.close();
@@ -45,14 +46,25 @@ export class RequestDialogComponent {
     return this.certificateForm.valid;
   }
 
+  sanitizeInput(input: string): string {
+    const safeHtml: SafeHtml = this.sanitizer.sanitize(SecurityContext.HTML, input) ?? '';
+    return safeHtml.toString();
+  }
+  
   sendRequest() {
-    let request: CreateCertificate = {
-      signatureAlgorithm: this.certificateForm.value.algorithm as string,
-      issuer: this.certificateForm.value.issuer as string,
-      type: this.certificateForm.value.certificateType as string,
-      email: this.authService.getEmail()
+
+    const email = this.authService.getEmail();
+      if (!email || !this.validateEmail(email)) {
+      // Handle invalid email address
+      return;
     }
 
+    let request: CreateCertificate = {
+      signatureAlgorithm: this.sanitizeInput(this.certificateForm.value.algorithm as string),
+      issuer: this.sanitizeInput(this.certificateForm.value.issuer as string),
+      type: this.sanitizeInput(this.certificateForm.value.certificateType as string),
+      email: email
+    }
 
     this.requestService.sendRequest(request).subscribe({
       next: (res) => {
@@ -63,4 +75,9 @@ export class RequestDialogComponent {
     cancel() {
       this.dialogRef.close();
     }
+
+  validateEmail(email: string): boolean {
+    const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return pattern.test(email);
+  }
 }

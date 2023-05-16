@@ -1,6 +1,7 @@
 import {HttpErrorResponse} from '@angular/common/http';
-import {Component, OnInit} from '@angular/core';
-import {FormGroup, FormControl, Validators, ValidatorFn, AbstractControl} from '@angular/forms';
+import {Component, OnInit, SecurityContext} from '@angular/core';
+import {FormGroup, FormControl, Validators, ValidatorFn, AbstractControl, ValidationErrors} from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import {Router} from '@angular/router';
 import { RegistrationService } from 'src/app/service/registration.service';
 
@@ -23,12 +24,13 @@ export class RegisterComponent {
     surname: new FormControl('', [Validators.pattern(this.allTextPattern), Validators.required]),
     phoneNumber: new FormControl('', [Validators.pattern(this.phoneNumberPattern), Validators.minLength(6), Validators.maxLength(20), Validators.required]),
     email: new FormControl('', [Validators.email, Validators.required]),
-    password: new FormControl('', [Validators.minLength(8), Validators.required]),
+    password: new FormControl('', [Validators.minLength(8), Validators.required, passwordStrengthValidator]),
     confirmPassword: new FormControl('', [Validators.required]),
     twoFactor: new FormControl('', [Validators.required]),
   }, {validators: [match('password', 'confirmPassword')]});
 
-  constructor(private router: Router,
+  constructor(private sanitizer: DomSanitizer,
+              private router: Router,
               private registrationService: RegistrationService) {
   }
 
@@ -38,17 +40,22 @@ export class RegisterComponent {
     })
   }
 
+  sanitizeInput(input: string): string {
+    const safeHtml: SafeHtml = this.sanitizer.sanitize(SecurityContext.HTML, input) ?? '';
+    return safeHtml.toString();
+  }
+
   signup() {
     console.log(this.signupForm.value.twoFactor);
     this.submitted = true;
     
     if (this.signupForm.valid) {
       const registration: Registration = {
-        name: this.signupForm.value.name,
-        surname: this.signupForm.value.surname,
-        telephoneNumber: this.signupForm.value.phoneNumber,
-        email: this.signupForm.value.email,
-        password: this.signupForm.value.password,
+        name: this.sanitizeInput(this.signupForm.value.name as string),
+        surname: this.sanitizeInput(this.signupForm.value.surname as string),
+        telephoneNumber: this.sanitizeInput(this.signupForm.value.phoneNumber as string),
+        email: this.sanitizeInput(this.signupForm.value.email as string),
+        password: this.sanitizeInput(this.signupForm.value.password as string),
         userActivationType: this.signupForm.value.twoFactor
       }
   
@@ -79,6 +86,20 @@ export function match(controlName: string, checkControlName: string): ValidatorF
   };
 }
 
+export function passwordStrengthValidator(control: AbstractControl): ValidationErrors | null {
+  const value: string = control.value;
+  const hasNumber = /[0-9]/.test(value);
+  const hasUpper = /[A-Z]/.test(value);
+  const hasLower = /[a-z]/.test(value);
+  const hasSpecial = /[$@!%*?&]/.test(value);
+
+  if (!value || value.length < 8 || !hasNumber || !hasUpper || !hasLower || !hasSpecial) {
+    return { strength: true };
+  }
+
+  return null;
+}
+
 export interface Registration {
   name?: string | null,
   surname?: string | null,
@@ -87,3 +108,5 @@ export interface Registration {
   password?: string | null,
   userActivationType?: string|null
 }
+
+

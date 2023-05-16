@@ -1,9 +1,13 @@
 package com.ib.service;
 
 import com.ib.DTO.ForgotPasswordDTO;
+import com.ib.DTO.RenewPasswordDTO;
 import com.ib.DTO.ResetPasswordDTO;
 import com.ib.exception.*;
-import com.ib.model.users.*;
+import com.ib.model.users.Authority;
+import com.ib.model.users.EndUser;
+import com.ib.model.users.PasswordResetToken;
+import com.ib.model.users.User;
 import com.ib.repository.users.IEndUserRepository;
 import com.ib.repository.users.IPasswordResetTokenRepository;
 import com.ib.repository.users.IUserRepository;
@@ -75,7 +79,7 @@ public class EndUserService {
         Authority authority = authorityService.findByName("END_USER");
         newUser.setAuthority(authority);
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
-
+        newUser.setLastPasswordResetDate(LocalDateTime.now());
         newUser.setEnabled(false);
         checkIFUserResourcesAreUsed(newUser);
         save(newUser);
@@ -273,8 +277,23 @@ public class EndUserService {
 
     private void updatePassword(User user, String newPassword) {
         user.setPassword(bCryptPasswordEncoder.encode(newPassword));
+        user.setLastPasswordResetDate(LocalDateTime.now());
         userRepository.save(user);
 
         passwordResetTokenRepository.deleteAllByUser(user);
+    }
+
+    public void renewPassword(RenewPasswordDTO renewPasswordDTO) throws PasswordNotMatchingException, EntityNotFoundException {
+        User user = userRepository.findByEmail(renewPasswordDTO.getEmail()).orElse(null);
+
+        if (user == null) throw new EntityNotFoundException();
+        //if (user == null) throw new UserDoesNotExistException();
+        if (passwordEncoder.matches(renewPasswordDTO.getOldPassword(),user.getPassword())) {
+            user.setPassword(passwordEncoder.encode(renewPasswordDTO.getNewPassword()));
+            user.setLastPasswordResetDate(LocalDateTime.now());
+            userRepository.save(user);
+        } else {
+            throw new PasswordNotMatchingException();
+        }
     }
 }

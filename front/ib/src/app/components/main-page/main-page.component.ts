@@ -69,7 +69,8 @@ export class MainPageComponent implements OnInit{
       if (target.files!=null && target.files.length == 1) {
         const file = target.files[0];
         console.log("pozvao servis");
-        this.certificateService.uploadCertificate(file).subscribe({
+        if (file.type == 'application/x-x509-ca-cert') {
+          this.certificateService.uploadCertificate(file).subscribe({
             next: (res) => {
               
               this.snackBar.open('Valid', 'Close', {
@@ -86,6 +87,14 @@ export class MainPageComponent implements OnInit{
               });
             }
           });
+        }
+        else {
+          this.snackBar.open('File format not valid', 'Close', {
+            duration: 3000,
+            verticalPosition: 'bottom',
+            horizontalPosition: 'center',
+          });
+        }
       } else {
         this.snackBar.open('Error', 'Close', {
           duration: 3000,

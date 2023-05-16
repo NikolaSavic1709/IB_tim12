@@ -6,6 +6,7 @@ import { environment } from 'src/environments/environment';
 import { LoginMFARequest, LoginRequest } from 'src/app/model/LoginRequest';
 import { TokenResponse } from 'src/app/model/TokenResponse';
 import { Router } from '@angular/router';
+import { RenewPasswordRequest } from 'src/app/model/RenewPasswordRequest';
 
 @Injectable({
   providedIn: 'root'
@@ -45,13 +46,27 @@ export class AuthService {
         this.email = login.email;
         this.password = login.password;
         this.router.navigate(['/two-factor-auth']);
+        this.hasError.next(false);
       },
       error: (error) => {
         if (error instanceof HttpErrorResponse) {
-          this.hasError.next(true);
+          const errorCode = error.status;
+
+          if (errorCode === 403) {
+            localStorage.setItem('expiredPassword', 'true');
+            this.router.navigate(['/renew-password'])
+          } else {
+            this.hasError.next(true);
+          }
         }
       },
     });
+  }
+
+  renewPassword( renewRequest: RenewPasswordRequest): Observable<any> {
+    return this.http.post<string>(environment.apiHost + 'renewPassword', renewRequest, {
+      headers: this.headers,
+    })
   }
 
   loginMFA(auth: LoginMFARequest): any {
@@ -59,20 +74,20 @@ export class AuthService {
       headers: this.headers,
     }).subscribe({
       next: (result) => {
-        console.log(result.accessToken);
         localStorage.setItem('user', JSON.stringify(result.accessToken));
         this.setUser();
-
-        // if (this.getRole() == "ADMIN") {
-        //   this.router.navigate(['/certificates']);
-        // } else if (this.getRole() == "USER") {
-        //   this.router.navigate(['/certificates']);
-        // }
         this.router.navigate(['/certificates']);
       },
       error: (error) => {
         if (error instanceof HttpErrorResponse) {
           this.hasError.next(true);
+          const errorCode = error.status;
+
+          if (errorCode === 403) {
+
+          } else {
+            this.hasError.next(true);
+          }
         }
       },
     });
@@ -120,6 +135,16 @@ export class AuthService {
     if (localStorage.getItem('user') != null) {
       return true;
     }
+    return false;
+  }
+
+  isPasswordExpired(): boolean {
+    if (localStorage.getItem('expiredPassword') === 'true') {
+      console.log('true');
+      return true;
+    }
+    console.log('false');
+
     return false;
   }
 

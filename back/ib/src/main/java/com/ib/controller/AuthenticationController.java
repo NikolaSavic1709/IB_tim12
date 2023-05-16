@@ -8,13 +8,11 @@ import com.ib.model.dto.request.RegistrationRequest;
 import com.ib.model.users.EndUser;
 import com.ib.model.users.User;
 import com.ib.service.EndUserService;
+import com.ib.service.users.impl.UserService;
 import com.ib.service.users.interfaces.IUserActivationService;
 import com.ib.utils.TokenUtils;
-import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,6 +22,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 
 //Kontroler zaduzen za autentifikaciju korisnika
@@ -42,6 +42,9 @@ public class AuthenticationController {
     private EndUserService endUserService;
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
     private IUserActivationService userActivationService;
 
     @PostMapping("/login")
@@ -49,6 +52,10 @@ public class AuthenticationController {
 
         if(!endUserService.checkUserEnabled(authenticationRequest.getEmail())){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid login");
+        }
+        User user = userService.findByEmail(authenticationRequest.getEmail());
+        if (user.getLastPasswordResetDate().isBefore(LocalDateTime.now().minusMinutes(5))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Password expired");
         }
 
         String mfaType = authenticationRequest.getMfaType();
@@ -92,9 +99,9 @@ public class AuthenticationController {
         User user = (User) authentication.getPrincipal();
         String jwt = tokenUtils.generateToken(user);
         int expiresIn = tokenUtils.getExpiredIn();
-
         return ResponseEntity.ok(new JWTToken(jwt, expiresIn));
     }
+
 
     @GetMapping(value = "/logout", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> logoutUser () {
@@ -173,6 +180,16 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body( "User does not exist!");
         } catch (IncorrectCodeException | CodeExpiredException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Code is expired or not correct!");
+        }
+    }
+
+    @PostMapping(value = "/renewPassword", consumes = "application/json")
+    public ResponseEntity<?> renewPassword(@Valid @RequestBody RenewPasswordDTO renewPasswordDTO) {
+        try {
+            endUserService.renewPassword(renewPasswordDTO);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Password successfully changed!");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email or old password incorrect!");
         }
     }
 }
