@@ -83,12 +83,15 @@ public class CertificateRequestService extends JPAService<CertificateRequest> im
             throw new ForbiddenException("Root certificates mustn't have issuer");
 
 
+
         Certificate issuerCert=new Certificate();
         if(requestCreation.getIssuer()!=null) {
             issuerCert = certificateService.getBySerialNumber(requestCreation.getIssuer());
             // ili nije aktivan ili nije validan (povucen, istekao...)
             if(issuerCert.getStatus().equals(CertificateStatus.INVALID) || !certificateValidationService.getAndCheck(requestCreation.getIssuer()))
                 throw new EntityNotFoundException("Invalid issuer");
+            if (issuerCert.getType().equals(CertificateType.END))
+                throw new ForbiddenException("End certificate can't be issuer");
         }
         Certificate certificateMetadata = certificateService.createCertificateMetadata(requestCreation);
 

@@ -1,0 +1,12 @@
+{
+  "/api": {
+    "target": "https://localhost:8080",
+    "secure": false,
+    "logLevel": "debug",
+    "changeOrigin": true,
+    "ssl": {
+      "key": "src/assets/certificate.pem",
+      "cert": "src/assets/certificate.pem"
+    }
+  }
+}

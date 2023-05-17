@@ -27,7 +27,7 @@ import java.util.zip.ZipOutputStream;
 
 @RestController
 @RequestMapping(value = "api/certificate")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://localhost:4200")
 public class CertificateController {
 
     private final ICertificateService certificateService;

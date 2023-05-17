@@ -82,7 +82,9 @@ public class WebSecurityConfig {
         // zbog jednostavnosti primera ne koristimo Anti-CSRF token (https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
         http.csrf().disable();
         http.headers().frameOptions().disable();
-
+        http
+                .requiresChannel(channel ->
+                        channel.anyRequest().requiresSecure());
         // ulancavanje autentifikacije
         http.authenticationProvider(authenticationProvider());
         return http.build();

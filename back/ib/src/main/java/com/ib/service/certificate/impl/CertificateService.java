@@ -204,9 +204,10 @@ public class CertificateService extends JPAService<Certificate> implements ICert
     private static KeyPair generateKeyPair() {
         try {
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-            SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+            SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN"); //server.ssl.key-store-password key
             keyGen.initialize(1024, random);
-            return keyGen.generateKeyPair();
+            KeyPair keyPair=keyGen.generateKeyPair();
+            return keyPair;
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
         }
