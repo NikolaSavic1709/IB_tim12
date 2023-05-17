@@ -23,6 +23,7 @@ import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -128,11 +129,17 @@ public class CertificateService extends JPAService<Certificate> implements ICert
 
             certificateFileStorage.exportCertificate(cert);
             certificateFileStorage.exportPrivateKey(keyPairSubject.getPrivate(), sn);
-
+            addToKeystore("testKeystore.p12","password","testAlias",sn);
             return cert;
         } catch (IllegalArgumentException | IllegalStateException | OperatorCreationException | CertificateException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (KeyStoreException e) {
+            System.out.println("mrs");
+            throw new RuntimeException(e);
+        } catch (NoSuchAlgorithmException e) {
+            System.out.println("mrsssss");
             throw new RuntimeException(e);
         }
         return null;
@@ -236,5 +243,30 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         Certificate cert = certificateRepository.findBySerialNumber(serialNumber);
         return cert.getEmail();
     }
+    public void addToKeystore(String keystorePath, String keystorePassword, String alias, String serialNumber) throws KeyStoreException,
+            NoSuchAlgorithmException, CertificateException, IOException {
 
+        KeyStore keystore = KeyStore.getInstance("PKCS12");
+        char[] password = keystorePassword.toCharArray();
+        keystore.load(null, password);
+
+        // Load the certificate
+        X509Certificate certificate=certificateFileStorage.getCertificateFromStorage(serialNumber);
+
+        // Load the private key
+        PrivateKey privateKey=certificateFileStorage.getPrivateKeyFromStorage(serialNumber);
+
+        // Create a keystore entry with the certificate and private key
+        KeyStore.PrivateKeyEntry privateKeyEntry = new KeyStore.PrivateKeyEntry(privateKey,
+                new java.security.cert.Certificate[]{certificate});
+        KeyStore.ProtectionParameter passwordProtection = new KeyStore.PasswordProtection(password);
+        keystore.setEntry(alias, privateKeyEntry, passwordProtection);
+
+        // Save the keystore to a file
+        FileOutputStream keystoreOutputStream = new FileOutputStream(keystorePath);
+        keystore.store(keystoreOutputStream, password);
+
+        // Close all the streams
+        keystoreOutputStream.close();
+    }
 }

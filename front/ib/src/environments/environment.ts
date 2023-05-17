@@ -1,5 +1,5 @@
 export const environment = {
     production: false,
-    apiHost: 'https://localhost:8080/api/',
+    apiHost: '/api/',
     // sslCertificate: '../assets/certificate.crt'
 }

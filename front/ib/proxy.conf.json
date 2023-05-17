@@ -5,8 +5,8 @@
     "logLevel": "debug",
     "changeOrigin": true,
     "ssl": {
-      "key": "src/assets/certificate.pem",
-      "cert": "src/assets/certificate.pem"
+      "key": "src/assets/certificate.key",
+      "cert": "src/assets/certificate.crt"
     }
   }
 }
