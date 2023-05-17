@@ -1,0 +1,10 @@
+# OpenSSL Configuration File
+
+[req]
+prompt = no
+distinguished_name = dn
+
+[dn]
+C = US
+O = MyOrganization
+CN = localhost

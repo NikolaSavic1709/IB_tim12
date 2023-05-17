@@ -40,13 +40,13 @@ public class PostgreSQLConfig {
 //        return new HikariDataSource(config);
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.postgresql.Driver");
-        dataSource.setUrl(jdbcUrl);
+        dataSource.setUrl(jdbcUrl+"?sslmode=require&sslcert='C:\\Nikola\\programiranje\\6_semestar\\bezbednost\\IB_tim12\\back\\ib\\certificate.crt'&sslkey='C:\\Nikola\\programiranje\\6_semestar\\bezbednost\\IB_tim12\\back\\ib\\private.key'");
         dataSource.setUsername(username);
         dataSource.setPassword(password);
-        System.setProperty("javax.net.ssl.keyStore", sslKeyPath);
-        System.setProperty("javax.net.ssl.keyStorePassword", "password");
-        System.setProperty("javax.net.ssl.trustStore", sslCertPath);
-        System.setProperty("javax.net.ssl.trustStorePassword", "password");
+//        System.setProperty("javax.net.ssl.keyStore", sslKeyPath);
+//        System.setProperty("javax.net.ssl.keyStorePassword", "password");
+//        System.setProperty("javax.net.ssl.trustStore", sslCertPath);
+//        System.setProperty("javax.net.ssl.trustStorePassword", "password");
 
         return dataSource;
     }
