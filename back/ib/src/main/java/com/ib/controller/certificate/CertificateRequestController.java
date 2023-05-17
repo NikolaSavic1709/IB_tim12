@@ -12,10 +12,12 @@ import com.ib.service.users.interfaces.IUserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
@@ -57,8 +59,11 @@ public class CertificateRequestController {
 
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @PostMapping(value = "/create",consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createRequest(@Valid @RequestBody RequestCreationDTO requestCreationDTO, @RequestHeader("Authorization") String token)
+    public ResponseEntity<?> createRequest(@Valid @RequestBody RequestCreationDTO requestCreationDTO, @RequestHeader("Authorization") String token, @RequestHeader HttpHeaders headers)
     {
+        if (!headers.containsKey("recaptcha")){
+            throw new BadCredentialsException("Invalid reCaptcha token");
+        }
         try {
             CertificateRequest request = requestService.createRequest(requestCreationDTO, token);
             CertificateForRequestDTO requestDTO = new CertificateForRequestDTO(request);

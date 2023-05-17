@@ -34,6 +34,13 @@ import { TwoFactorAuthComponent } from './components/two-factor-auth/two-factor-
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { RevokeDialogComponent } from './dialog/revoke-dialog/revoke-dialog/revoke-dialog.component';
 import { RenewPasswordComponent } from './components/renew-password/renew-password.component';
+import { RecaptchaModule,
+  RECAPTCHA_SETTINGS,
+  RecaptchaSettings,
+  RecaptchaFormsModule,
+  RECAPTCHA_V3_SITE_KEY,
+  RecaptchaV3Module } from "ng-recaptcha";
+import { environment } from 'src/environments/environment';
 
 @NgModule({
   declarations: [
@@ -71,14 +78,25 @@ import { RenewPasswordComponent } from './components/renew-password/renew-passwo
     MatOptionModule,
     MatSelectModule,
     ReactiveFormsModule,
-    MatRadioModule
+    MatRadioModule,
+    RecaptchaModule,
+    RecaptchaFormsModule,
+    RecaptchaV3Module
   ],
   providers: [
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
       multi: true,
-    }
+    },
+    { provide: RECAPTCHA_V3_SITE_KEY, useValue: environment.reCaptchaV3SiteKey }
+    ,
+    // {
+    //   provide: RECAPTCHA_SETTINGS,
+    //   useValue: {
+    //     siteKey: environment.reCaptchaV2SiteKey
+    //   } as RecaptchaSettings
+    // }
   ],
   bootstrap: [AppComponent]
 })

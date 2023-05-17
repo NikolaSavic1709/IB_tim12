@@ -32,9 +32,13 @@ export class CertificateServiceService {
     return this.http.post('http://localhost:8080/api/certificate/validity/file', formData);
   }
 
-  revokeCertificate(serialNumber:string, revocationReason:string):Observable<any>{
-
-    return this.http.post('http://localhost:8080/api/certificate/revoke/' +  serialNumber, revocationReason);
+  revokeCertificate(serialNumber:string, revocationReason:string, token:string):Observable<any>{
+    const recaptchaHeaders = new HttpHeaders({
+      recaptcha:token
+    });
+    return this.http.post('http://localhost:8080/api/certificate/revoke/' +  serialNumber, revocationReason, {
+      headers: recaptchaHeaders,
+    });
   }
 
   ngOnInit() {

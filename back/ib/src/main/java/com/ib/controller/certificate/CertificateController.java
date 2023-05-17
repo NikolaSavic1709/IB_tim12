@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -114,8 +115,11 @@ public class CertificateController {
 
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @PostMapping(value = "/revoke/{serialNumber}")
-    public ResponseEntity<?> revokeCertificate(@PathVariable String serialNumber, @RequestBody String revocationReason, @RequestHeader("Authorization") String token)
+    public ResponseEntity<?> revokeCertificate(@PathVariable String serialNumber, @RequestBody String revocationReason, @RequestHeader("Authorization") String token, @RequestHeader HttpHeaders headers)
     {
+        if (!headers.containsKey("recaptcha")){
+            throw new BadCredentialsException("Invalid reCaptcha token");
+        }
         try {
             certificateValidationService.revokeCertificate(serialNumber,revocationReason, token);
         } catch (ForbiddenException e) {

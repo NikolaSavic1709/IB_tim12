@@ -1,8 +1,10 @@
-import {Component, OnInit} from '@angular/core';
-import {FormGroup, FormControl, Validators} from '@angular/forms';
-import {Router} from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { LoginRequest } from 'src/app/model/LoginRequest';
 import { AuthService } from 'src/app/service/auth-service/auth.service';
+import { ReCaptchaV3Service } from 'ng-recaptcha';
+// import { RecaptchaResponse, RecaptchaService } from 'src/app/service/recaptcha.service';
 
 @Component({
   selector: 'app-login',
@@ -12,23 +14,28 @@ import { AuthService } from 'src/app/service/auth-service/auth.service';
 export class LoginComponent {
 
   hide = true;
-  submitted=false;
+  submitted = false;
   loginForm = new FormGroup({
     email: new FormControl('', [Validators.email, Validators.required]),
     password: new FormControl('', [Validators.minLength(6), Validators.required]),
     twoFactor: new FormControl('', [Validators.required]),
+    // recaptcha: new FormControl('', [Validators.required]),
     keepLogin: new FormControl(),
   });
   hasError = false;
 
-  constructor(private authService: AuthService, private router: Router) {
+  constructor(private authService: AuthService,
+    private router: Router,
+    private reCaptchaV3Service: ReCaptchaV3Service,
+    // private recaptchaService: RecaptchaService
+    ) {
 
     this.authService.setUser();
   }
 
   ngOnInit(): void {
-    this.authService.hasErrorObs.subscribe((value)=>{
-      this.hasError=value;
+    this.authService.hasErrorObs.subscribe((value) => {
+      this.hasError = value;
     })
   }
 
@@ -41,7 +48,13 @@ export class LoginComponent {
     }
 
     if (this.loginForm.valid) {
-        this.authService.loginUserObs(login);
+      this.reCaptchaV3Service.execute('homepage')
+        .subscribe((token) => {
+          //console.log(token);
+          //this.handleToken(token));
+          this.authService.loginUserObs(login, token);
+        });
+
     }
   }
 

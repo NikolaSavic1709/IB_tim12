@@ -4,6 +4,7 @@ import { AuthService } from 'src/app/service/auth-service/auth.service';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { CertificateServiceService } from 'src/app/service/certificate-service.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ReCaptchaV3Service } from 'ng-recaptcha';
 
 @Component({
   selector: 'app-revoke-dialog',
@@ -16,13 +17,18 @@ export class RevokeDialogComponent {
     revocationReason: new FormControl('', [Validators.required, Validators.minLength(3)]),
   });
 
-  constructor(public dialogRef: MatDialogRef<RevokeDialogComponent>,@Inject(MAT_DIALOG_DATA) public data: string, public certificateService: CertificateServiceService, public authService: AuthService, private snackBar: MatSnackBar) {}
+  constructor(public dialogRef: MatDialogRef<RevokeDialogComponent>,
+     @Inject(MAT_DIALOG_DATA) public data: string,
+      public certificateService: CertificateServiceService,
+      private reCaptchaV3Service: ReCaptchaV3Service,
+      public authService: AuthService,
+      private snackBar: MatSnackBar) { }
 
   closeDialog() {
     this.dialogRef.close();
   }
 
-  ngOnInit() : void {}
+  ngOnInit(): void { }
 
 
   isFormValid(): boolean {
@@ -30,27 +36,36 @@ export class RevokeDialogComponent {
   }
 
   sendRequest() {
-    this.certificateService.revokeCertificate(this.data, this.revocationForm.value.revocationReason as string).subscribe({
-      next: (res) => {
-        this.dialogRef.close();
-        this.snackBar.open('Successfully revoked!', 'Close', {
-          duration: 3000,
-          verticalPosition: 'bottom',
-          horizontalPosition: 'center',
-        });
-      },
-      error:(error)=>{
-        this.snackBar.open('Cannot be revoked', 'Close', {
-          duration: 3000,
-          verticalPosition: 'bottom',
-          horizontalPosition: 'center',
-        });
-        this.cancel();
-      }
-    })
+    this.reCaptchaV3Service.execute('homepage')
+      .subscribe((token) => {
+        //console.log(token);
+        //this.handleToken(token));
+
+        this.certificateService.revokeCertificate(this.data, this.revocationForm.value.revocationReason as string,token).subscribe({
+          next: (res) => {
+            this.dialogRef.close();
+            this.snackBar.open('Successfully revoked!', 'Close', {
+              duration: 3000,
+              verticalPosition: 'bottom',
+              horizontalPosition: 'center',
+            });
+          },
+          error: (error) => {
+            this.snackBar.open('Cannot be revoked', 'Close', {
+              duration: 3000,
+              verticalPosition: 'bottom',
+              horizontalPosition: 'center',
+            });
+            this.cancel();
+          }
+        })
+
+      });
+
+
   }
 
   cancel() {
-      this.dialogRef.close();
+    this.dialogRef.close();
   }
 }

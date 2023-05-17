@@ -34,14 +34,17 @@ export class AuthService {
     this.user$.next(this.getRole());
   }
 
-  login(auth: LoginRequest): Observable<any> {
+  login(auth: LoginRequest, token:string): Observable<any> {
+    const recaptchaHeaders = new HttpHeaders({
+      skip: 'true', recaptcha:token
+    });
     return this.http.post(environment.apiHost + 'login', auth, {
-      headers: this.headers, responseType: 'text'
+      headers: recaptchaHeaders, responseType: 'text'
     });
   }
 
-  loginUserObs(login:LoginRequest):any{
-    this.login(login).subscribe({
+  loginUserObs(login:LoginRequest, token:string):any{
+    this.login(login, token).subscribe({
       next: (result) => {
         this.email = login.email;
         this.password = login.password;
@@ -63,15 +66,23 @@ export class AuthService {
     });
   }
 
-  renewPassword( renewRequest: RenewPasswordRequest): Observable<any> {
+  renewPassword( renewRequest: RenewPasswordRequest, token:string): Observable<any> {
+    const recaptchaHeaders = new HttpHeaders({
+      skip: 'true', recaptcha:token
+    });
+
     return this.http.post<string>(environment.apiHost + 'renewPassword', renewRequest, {
-      headers: this.headers,
+      headers: recaptchaHeaders,
     })
   }
 
-  loginMFA(auth: LoginMFARequest): any {
+  loginMFA(auth: LoginMFARequest, recaptchaToken:string): any {
+    const recaptchaHeaders = new HttpHeaders({
+      skip: 'true', recaptcha:recaptchaToken
+    });
+
     this.http.post<TokenResponse>(environment.apiHost + 'loginMFA', auth, {
-      headers: this.headers,
+      headers: recaptchaHeaders,
     }).subscribe({
       next: (result) => {
         localStorage.setItem('user', JSON.stringify(result.accessToken));

@@ -11,6 +11,7 @@ import { RegistrationService } from 'src/app/service/registration.service';
 export class AccountActivatedComponent {
   hasError: boolean;
   token: number|null|undefined;
+  recaptchaToken: string|null|undefined;
   activationType: string|null|undefined;
   activationResource: string|null|undefined;
 
@@ -18,6 +19,7 @@ export class AccountActivatedComponent {
               private route: ActivatedRoute,
               private registrationService: RegistrationService) {
     this.token = 0;
+    this.recaptchaToken='';
     this.activationType='';
     this.activationResource= '';
     this.hasError = false;
@@ -31,11 +33,12 @@ export class AccountActivatedComponent {
           // this.activationResource= params['resource'];
 
           this.token = this.registrationService.token;
+          this.recaptchaToken = this.registrationService.recaptchaToken;
           this.activationResource = this.registrationService.activationResource;
           this.activationType = this.registrationService.activationType;
 
-          if (this.token && this.activationResource && this.activationType)
-          this.registrationService.activateUser(this.token,this.activationResource, this.activationType).subscribe({
+          if (this.token && this.activationResource && this.activationType && this.recaptchaToken)
+          this.registrationService.activateUser(this.token,this.activationResource, this.activationType, this.recaptchaToken).subscribe({
             next: (result) => {
               this.hasError = false;
             },

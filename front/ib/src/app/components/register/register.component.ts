@@ -4,6 +4,7 @@ import {FormGroup, FormControl, Validators, ValidatorFn, AbstractControl, Valida
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import {Router} from '@angular/router';
 import { RegistrationService } from 'src/app/service/registration.service';
+import { ReCaptchaV3Service } from 'ng-recaptcha';
 
 @Component({
   selector: 'app-register',
@@ -31,7 +32,8 @@ export class RegisterComponent {
 
   constructor(private sanitizer: DomSanitizer,
               private router: Router,
-              private registrationService: RegistrationService) {
+              private registrationService: RegistrationService,
+              private reCaptchaV3Service: ReCaptchaV3Service) {
   }
 
   ngOnInit(): void {
@@ -59,7 +61,13 @@ export class RegisterComponent {
         userActivationType: this.signupForm.value.twoFactor
       }
   
-      this.registrationService.registerUserObs(registration);
+      this.reCaptchaV3Service.execute('homepage')
+        .subscribe((token) => {
+          //console.log(token);
+          //this.handleToken(token));
+          this.registrationService.registerUserObs(registration,token);
+        });
+      
     }
   }
 

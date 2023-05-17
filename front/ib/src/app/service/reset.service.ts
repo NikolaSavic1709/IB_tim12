@@ -21,17 +21,25 @@ export class ResetService {
   constructor(private http: HttpClient) {
   }
 
-  sendResetCode(type: string, resource:string): Observable<any> {
+  sendResetCode(type: string, resource:string, token:string): Observable<any> {
+    const recaptchaHeaders = new HttpHeaders({
+      skip: 'true', recaptcha:token
+    });
+
     return this.http.post(environment.apiHost + "forgotPassword",{
       activationType: type,
       activationResource: resource,
     }, 
-      {headers: this.headers, responseType: 'text'})
+      {headers: recaptchaHeaders, responseType: 'text'})
   }
 
-  changePasswordWithResetCode(resetPasswordDTO: ResetPasswordDTO): Observable<any> {
+  changePasswordWithResetCode(resetPasswordDTO: ResetPasswordDTO,token:string): Observable<any> {
+    const recaptchaHeaders = new HttpHeaders({
+      skip: 'true', recaptcha:token
+    });
+
     return this.http.post(environment.apiHost + "resetPassword", resetPasswordDTO,
-      {"headers": this.headers, responseType: 'text'})
+      {"headers": recaptchaHeaders, responseType: 'text'})
   }
 }
 

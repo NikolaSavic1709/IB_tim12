@@ -3,6 +3,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LoginMFARequest } from 'src/app/model/LoginRequest';
 import { AuthService } from 'src/app/service/auth-service/auth.service';
+import { ReCaptchaV3Service } from 'ng-recaptcha';
 
 @Component({
   selector: 'app-two-factor-auth',
@@ -22,7 +23,9 @@ export class TwoFactorAuthComponent {
   });
 
   constructor(private router: Router,
-    private route: ActivatedRoute, private authService: AuthService) {
+    private route: ActivatedRoute,
+    private reCaptchaV3Service: ReCaptchaV3Service,
+    private authService: AuthService) {
     this.token = 0;
     this.email = '';
     this.password = '';
@@ -53,7 +56,14 @@ export class TwoFactorAuthComponent {
         password: this.password,
       }
 
-      this.authService.loginMFA(loginMFA);
+      this.reCaptchaV3Service.execute('homepage')
+        .subscribe((recaptchaToken) => {
+          //console.log(token);
+          //this.handleToken(token));
+          this.authService.loginMFA(loginMFA, recaptchaToken);
+        });
+
+      
     }
   }
 

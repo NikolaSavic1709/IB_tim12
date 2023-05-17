@@ -14,10 +14,12 @@ import com.ib.utils.TokenUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -48,8 +50,11 @@ public class AuthenticationController {
     private IUserActivationService userActivationService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> createAuthenticationToken(@RequestBody @Valid JwtAuthenticationRequest authenticationRequest) throws Exception {
+    public ResponseEntity<?> createAuthenticationToken(@RequestBody @Valid JwtAuthenticationRequest authenticationRequest, @RequestHeader HttpHeaders headers) throws Exception {
 
+        if (!headers.containsKey("recaptcha")){
+            throw new BadCredentialsException("Invalid reCaptcha token");
+        }
         if(!endUserService.checkUserEnabled(authenticationRequest.getEmail())){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid login");
         }
@@ -78,7 +83,11 @@ public class AuthenticationController {
     }
 
     @PostMapping("/loginMFA")
-    public ResponseEntity<?> loginMFA(@RequestBody @Valid MFAAuthenticationRequest authenticationRequest) throws Exception {
+    public ResponseEntity<?> loginMFA(@RequestBody @Valid MFAAuthenticationRequest authenticationRequest, @RequestHeader HttpHeaders headers) throws Exception {
+
+        if (!headers.containsKey("recaptcha")){
+            throw new BadCredentialsException("Invalid reCaptcha token");
+        }
 
         if(!endUserService.checkUserEnabled(authenticationRequest.getEmail())){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid login");
@@ -110,7 +119,11 @@ public class AuthenticationController {
     }
 
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> register( @RequestBody RegistrationRequest registrationRequest) {
+    public ResponseEntity<?> register( @RequestBody RegistrationRequest registrationRequest, @RequestHeader HttpHeaders headers) {
+        if (!headers.containsKey("recaptcha")){
+            throw new BadCredentialsException("Invalid reCaptcha token");
+        }
+
         String activationType = registrationRequest.getUserActivationType();
         if (!activationType.equals("email") && !activationType.equals("sms")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Account activation is only possible via email or SMS");
@@ -130,7 +143,11 @@ public class AuthenticationController {
     }
 
     @PostMapping(value = "/activate")
-    public ResponseEntity<?> activateUser(@RequestBody @Valid AccountActivationDTO accountActivationDTO) {
+    public ResponseEntity<?> activateUser(@RequestBody @Valid AccountActivationDTO accountActivationDTO, @RequestHeader HttpHeaders headers) {
+        if (!headers.containsKey("recaptcha")){
+            throw new BadCredentialsException("Invalid reCaptcha token");
+        }
+
         String activationType = accountActivationDTO.getActivationType();
         if (!activationType.equals("email") && !activationType.equals("sms")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Account activation is only possible via email or SMS");
@@ -146,8 +163,11 @@ public class AuthenticationController {
     }
 
     @PostMapping(value="/forgotPassword")
-    public ResponseEntity<?> sendResetCodeToEmail(@RequestBody @Valid ForgotPasswordDTO forgotPasswordDTO)
-    {
+    public ResponseEntity<?> sendResetCodeToEmail(@RequestBody @Valid ForgotPasswordDTO forgotPasswordDTO, @RequestHeader HttpHeaders headers) {
+        if (!headers.containsKey("recaptcha")){
+            throw new BadCredentialsException("Invalid reCaptcha token");
+        }
+
         String activationType = forgotPasswordDTO.getActivationType();
         if (!activationType.equals("email") && !activationType.equals("sms")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Forgot password functionality is only possible via email or SMS");
@@ -166,8 +186,12 @@ public class AuthenticationController {
     }
 
     @PostMapping(value="/resetPassword", consumes = "application/json")
-    public ResponseEntity<?> changePasswordWithResetCode(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO)
+    public ResponseEntity<?> changePasswordWithResetCode(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO, @RequestHeader HttpHeaders headers)
     {
+        if (!headers.containsKey("recaptcha")){
+            throw new BadCredentialsException("Invalid reCaptcha token");
+        }
+
         String activationType = resetPasswordDTO.getActivationType();
         if (!activationType.equals("email") && !activationType.equals("sms")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Forgot password functionality is only possible via email or SMS");
@@ -184,7 +208,11 @@ public class AuthenticationController {
     }
 
     @PostMapping(value = "/renewPassword", consumes = "application/json")
-    public ResponseEntity<?> renewPassword(@Valid @RequestBody RenewPasswordDTO renewPasswordDTO) {
+    public ResponseEntity<?> renewPassword(@Valid @RequestBody RenewPasswordDTO renewPasswordDTO, @RequestHeader HttpHeaders headers) {
+        if (!headers.containsKey("recaptcha")){
+            throw new BadCredentialsException("Invalid reCaptcha token");
+        }
+
         try {
             endUserService.renewPassword(renewPasswordDTO);
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Password successfully changed!");

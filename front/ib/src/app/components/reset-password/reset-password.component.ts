@@ -4,6 +4,7 @@ import { match } from '../register/register.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ResetPasswordDTO, ResetService } from 'src/app/service/reset.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ReCaptchaV3Service } from 'ng-recaptcha';
 
 @Component({
   selector: 'app-reset-password',
@@ -27,7 +28,8 @@ export class ResetPasswordComponent {
 
   constructor(private router: Router,
               private route: ActivatedRoute,
-              private resetService: ResetService) {
+              private resetService: ResetService,
+              private reCaptchaV3Service: ReCaptchaV3Service) {
     this.token = 0;
     this.activationResource='';
     this.activationType='';
@@ -56,17 +58,24 @@ export class ResetPasswordComponent {
         activationResource: this.activationResource,
 
       }
-      this.resetService.changePasswordWithResetCode(resetPasswordDTO).subscribe({
-        next: (result) => {
-          this.router.navigate(['/password-changed']);
-        },
-        error: (error) => {
-          if (error instanceof HttpErrorResponse) {
-            this.hasError = true;
-          }
-        },
-      });
 
+      this.reCaptchaV3Service.execute('homepage')
+        .subscribe((token) => {
+          //console.log(token);
+          //this.handleToken(token));
+          
+          this.resetService.changePasswordWithResetCode(resetPasswordDTO,token).subscribe({
+            next: (result) => {
+              this.router.navigate(['/password-changed']);
+            },
+            error: (error) => {
+              if (error instanceof HttpErrorResponse) {
+                this.hasError = true;
+              }
+            },
+          });
+
+        });
 
     }
   }
