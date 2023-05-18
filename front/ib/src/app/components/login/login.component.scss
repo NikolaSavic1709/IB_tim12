@@ -191,9 +191,9 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    margin: 3% 10% 3% 10%;
-    border: 1px solid black;
-    cursor: pointer;
+    margin: 3% 30% 3% 30%;
+   // border: 1px solid black;
+   // cursor: pointer;
   }
 
   #difLogin p{
@@ -203,6 +203,13 @@
   #difLogin .sn-icon {
     color: #020202;
     font-size: 40px;
+   
+    margin-right: 5%;
+  }
+
+  #difLogin .gg-icon {
+    // color: #020202;
+    // font-size: 40px;
    
     margin-right: 5%;
   }

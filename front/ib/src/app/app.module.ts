@@ -42,6 +42,13 @@ import { RecaptchaModule,
   RecaptchaV3Module } from "ng-recaptcha";
 import { environment } from 'src/environments/environment';
 import { RejectDialogComponent } from './dialog/reject-dialog/reject-dialog.component';
+import { GoogleInitOptions, GoogleLoginProvider, SocialAuthServiceConfig } from '@abacritt/angularx-social-login';
+import {GoogleSigninButtonModule} from "@abacritt/angularx-social-login";
+
+const googleLoginOptions: GoogleInitOptions = {
+  oneTapEnabled: false, // default is true
+  scopes: 'email profile https://www.googleapis.com/auth/user.phonenumbers.read'
+};
 
 @NgModule({
   declarations: [
@@ -83,7 +90,8 @@ import { RejectDialogComponent } from './dialog/reject-dialog/reject-dialog.comp
     MatRadioModule,
     RecaptchaModule,
     RecaptchaFormsModule,
-    RecaptchaV3Module
+    RecaptchaV3Module,
+    GoogleSigninButtonModule
   ],
   providers: [
     {
@@ -91,8 +99,21 @@ import { RejectDialogComponent } from './dialog/reject-dialog/reject-dialog.comp
       useClass: AuthInterceptor,
       multi: true,
     },
-    { provide: RECAPTCHA_V3_SITE_KEY, useValue: environment.reCaptchaV3SiteKey }
-    ,
+    { provide: RECAPTCHA_V3_SITE_KEY, useValue: environment.reCaptchaV3SiteKey },
+    {
+      provide: 'SocialAuthServiceConfig',
+      useValue: {
+        autoLogin: false,
+        providers: [
+          {
+            id: GoogleLoginProvider.PROVIDER_ID,
+            provider: new GoogleLoginProvider(
+              '62679338211-4omk3gb5srm5i4lfpa3vscg73qah9evv.apps.googleusercontent.com',googleLoginOptions
+            ),
+          },
+        ],
+      } as SocialAuthServiceConfig,
+    }
     // {
     //   provide: RECAPTCHA_SETTINGS,
     //   useValue: {

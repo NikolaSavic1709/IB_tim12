@@ -4,6 +4,7 @@ import com.ib.authentication.RestAuthenticationEntryPoint;
 import com.ib.authentication.TokenAuthenticationFilter;
 import com.ib.service.users.impl.UserService;
 import com.ib.service.validation.impl.RecaptchaService;
+import com.ib.service.validation.interfaces.IRecaptchaService;
 import com.ib.utils.TokenUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -51,7 +52,7 @@ public class WebSecurityConfig {
 
 
     @Autowired
-    private RecaptchaService recaptchaService;
+    private IRecaptchaService recaptchaService;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
@@ -75,6 +76,7 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/forgotPassword").permitAll()
                 .requestMatchers("/api/resetPassword").permitAll()
                 .requestMatchers("/api/renewPassword").permitAll()
+                .requestMatchers("/api/google/login").permitAll()
 
 //        http.authorizeHttpRequests().requestMatchers("/**").permitAll()
                 // za svaki drugi zahtev korisnik mora biti autentifikovan

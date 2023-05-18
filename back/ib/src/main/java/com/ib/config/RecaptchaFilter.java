@@ -2,6 +2,7 @@ package com.ib.config;
 
 import com.ib.DTO.RecaptchaResponse;
 import com.ib.service.validation.impl.RecaptchaService;
+import com.ib.service.validation.interfaces.IRecaptchaService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,9 +15,9 @@ import java.io.IOException;
 
 public class RecaptchaFilter extends OncePerRequestFilter {
 
-    private final RecaptchaService recaptchaService;
+    private final IRecaptchaService recaptchaService;
 
-    public RecaptchaFilter(RecaptchaService recaptchaService) {
+    public RecaptchaFilter(IRecaptchaService recaptchaService) {
         this.recaptchaService = recaptchaService;
     }
     @Override

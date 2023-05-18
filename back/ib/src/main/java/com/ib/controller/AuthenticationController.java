@@ -1,5 +1,9 @@
 package com.ib.controller;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.ib.DTO.*;
 import com.ib.exception.*;
 import com.ib.model.dto.JWTToken;
@@ -8,12 +12,14 @@ import com.ib.model.dto.request.RegistrationRequest;
 import com.ib.model.users.EndUser;
 import com.ib.model.users.User;
 import com.ib.service.EndUserService;
+import com.ib.service.OAuthService;
 import com.ib.service.users.impl.UserService;
 import com.ib.service.users.interfaces.IUserActivationService;
 import com.ib.utils.TokenUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,7 +31,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
+import java.util.Collections;
 
 
 //Kontroler zaduzen za autentifikaciju korisnika
@@ -45,6 +54,9 @@ public class AuthenticationController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private OAuthService oauthService;
 
     @Autowired
     private IUserActivationService userActivationService;
@@ -109,6 +121,23 @@ public class AuthenticationController {
         String jwt = tokenUtils.generateToken(user);
         int expiresIn = tokenUtils.getExpiredIn();
         return ResponseEntity.ok(new JWTToken(jwt, expiresIn));
+    }
+
+    @PostMapping("/google/login")
+    public ResponseEntity<?> googleLogin(@RequestBody @Valid GoogleTokenDTO tokenDto){
+        try{
+            User user = oauthService.loadUserFromGoogle(tokenDto);
+
+            String jwt = tokenUtils.generateToken(user);
+            int expiresIn = tokenUtils.getExpiredIn();
+            return ResponseEntity.ok(new JWTToken(jwt, expiresIn));
+
+        }catch (OAuthException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (OAuthUserUnregistered e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+
     }
 
 

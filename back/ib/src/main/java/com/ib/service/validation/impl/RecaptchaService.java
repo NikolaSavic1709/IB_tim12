@@ -1,6 +1,7 @@
 package com.ib.service.validation.impl;
 
 import com.ib.DTO.RecaptchaResponse;
+import com.ib.service.validation.interfaces.IRecaptchaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -10,7 +11,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-public class RecaptchaService {
+public class RecaptchaService implements IRecaptchaService {
 
     @Value("${recaptcha.secretKey}")
     private String secretKey;
@@ -23,6 +24,7 @@ public class RecaptchaService {
         this.restTemplate = restTemplate;
     }
 
+    @Override
     public RecaptchaResponse validateToken(String recaptchaToken) {
 
         // https://www.google.com/recaptcha/api/siteverify METHOD: POST

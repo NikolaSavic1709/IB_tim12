@@ -22,7 +22,7 @@ const routes: Routes = [
     canActivate: [NotLoggedInGuard]
  },
   { path: 'requests', component: RequestPageComponent,
-  canActivate: [NotLoggedInGuard, RenewPasswordGuard] },
+  canActivate: [NotLoggedInGuard] },  //renew
   { path: 'login', component: LoginComponent,
   canActivate: [LoginGuard] },
   { path: 'register', component: RegisterComponent,

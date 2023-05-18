@@ -4,6 +4,10 @@ import { Router } from '@angular/router';
 import { LoginRequest } from 'src/app/model/LoginRequest';
 import { AuthService } from 'src/app/service/auth-service/auth.service';
 import { ReCaptchaV3Service } from 'ng-recaptcha';
+import {GoogleLoginProvider, SocialAuthService, SocialUser} from "@abacritt/angularx-social-login";
+import { OauthService } from 'src/app/service/oauth.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Subscription } from 'rxjs';
 // import { RecaptchaResponse, RecaptchaService } from 'src/app/service/recaptcha.service';
 
 @Component({
@@ -26,17 +30,44 @@ export class LoginComponent {
 
   constructor(private authService: AuthService,
     private router: Router,
+    private socialAuthService:SocialAuthService,
     private reCaptchaV3Service: ReCaptchaV3Service,
+    private oauthService: OauthService,
     // private recaptchaService: RecaptchaService
     ) {
 
     this.authService.setUser();
   }
 
+
   ngOnInit(): void {
     this.authService.hasErrorObs.subscribe((value) => {
       this.hasError = value;
     })
+
+    this.socialAuthService.authState.subscribe((user: SocialUser) => {
+      // console.log(user);
+      this.oauthService.login(user.idToken).subscribe({
+        next: (result) => {
+          //console.log(result);
+          localStorage.setItem('user', JSON.stringify(result.accessToken));
+          this.authService.setUser();
+          this.router.navigate(['/certificates']);
+        },
+        error: (error) => {
+          if (error instanceof HttpErrorResponse) {
+            const errorCode = error.status;
+  
+            if (errorCode === 403) {
+              // account not registered
+              this.hasError=true;
+            } else {
+              this.hasError=true;
+            }
+          }
+        },
+      });
+    });
   }
 
   login() {
