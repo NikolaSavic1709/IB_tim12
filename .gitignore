@@ -1,7 +1,7 @@
 # Created by https://www.toptal.com/developers/gitignore/api/angular,maven,java,database,intellij,webstorm
 # Edit at https://www.toptal.com/developers/gitignore?templates=angular,maven,java,database,intellij,webstorm
 
-back/ib/src/main/resources/application.properties
+application.properties
 
 ### Angular ###
 ## Angular ##

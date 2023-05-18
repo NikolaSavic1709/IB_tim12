@@ -24,8 +24,6 @@ public class PasswordResetToken {
 
     @Column(name = "token", nullable = false)
     @NotNull
-    @NotEmpty
-    @NotBlank
     private Integer token;
 
     @OneToOne(targetEntity = User.class, fetch = FetchType.EAGER)
@@ -35,7 +33,6 @@ public class PasswordResetToken {
 
     @Column(name = "expiry_date", nullable = false)
     @NotNull
-    @NotEmpty
     private LocalDateTime tokenExpiryDate;
 }
 

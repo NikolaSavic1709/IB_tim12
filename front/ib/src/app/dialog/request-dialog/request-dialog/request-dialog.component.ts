@@ -74,6 +74,9 @@ export class RequestDialogComponent {
       .subscribe((token) => {
         //console.log(token);
         //this.handleToken(token));
+        if (request.issuer == "") {
+          request.issuer = null;
+        }
         this.requestService.sendRequest(request,token).subscribe({
           next: (res) => {
             this.dialogRef.close();

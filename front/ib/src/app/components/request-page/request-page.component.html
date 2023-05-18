@@ -5,8 +5,8 @@
         <mat-icon> add </mat-icon>
         Create request
     </button>
-    <button mat-raised-button>ACCEPT</button>
-    <button mat-raised-button>REJECT</button>
+    <button mat-raised-button (click)="acceptRequests()">ACCEPT</button>
+    <button mat-raised-button (click)="rejectRequests()">REJECT</button>
   
   </div>
   <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">

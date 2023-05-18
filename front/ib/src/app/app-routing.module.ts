@@ -19,7 +19,7 @@ import { NotRenewPasswordGuard } from './guard/not-renew-password.guard';
 
 const routes: Routes = [
   { path: 'certificates', component: MainPageComponent,
-    canActivate: [NotLoggedInGuard, RenewPasswordGuard]
+    canActivate: [NotLoggedInGuard]
  },
   { path: 'requests', component: RequestPageComponent,
   canActivate: [NotLoggedInGuard, RenewPasswordGuard] },

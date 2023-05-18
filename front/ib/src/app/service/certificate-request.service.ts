@@ -27,6 +27,13 @@ export class CertificateRequestService {
     });
   }
 
+  rejectRequest(serialNumber:string, rejectionReason:string):Observable<any>{
+    return this.http.post('http://localhost:8080/api/request/reject/' +  serialNumber, rejectionReason);
+  }
+
+  acceptRequest(serialNumber: string): Observable<any> {
+    return this.http.put('http://localhost:8080/api/request/accept/' +  serialNumber, "");
+  }
   ngOnInit() {
     
   }

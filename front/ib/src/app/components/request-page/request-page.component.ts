@@ -3,8 +3,10 @@ import { CertificateRequest } from '../../model/CertificateRequest';
 import {MatTableDataSource} from '@angular/material/table';
 import {SelectionModel} from '@angular/cdk/collections';
 import { CertificateRequestService } from '../../service/certificate-request.service';
-import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
+import { MatDialog, MatDialogConfig, MatDialogRef } from '@angular/material/dialog';
 import { RequestDialogComponent } from '../../dialog/request-dialog/request-dialog/request-dialog.component';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { RejectDialogComponent } from 'src/app/dialog/reject-dialog/reject-dialog.component';
 
 @Component({
   selector: 'app-request-page',
@@ -18,7 +20,7 @@ export class RequestPageComponent {
     dataSource = new MatTableDataSource<CertificateRequest>();
     selection = new SelectionModel<CertificateRequest>(true, []);
   
-    constructor(private certificateRequestService: CertificateRequestService, private matDialog: MatDialog) { }
+    constructor(private snackBar: MatSnackBar, private certificateRequestService: CertificateRequestService, private matDialog: MatDialog) { }
 
     ngOnInit() {
   
@@ -47,6 +49,40 @@ export class RequestPageComponent {
       const dialogConfig = new MatDialogConfig();
         dialogConfig.width = "300px"; 
         const modalDialog = this.matDialog.open(RequestDialogComponent, dialogConfig);
+    }
+
+    acceptRequests() {
+      this.selection.selected.forEach(cert => {
+        let serialNumber = cert.serialNumber;
+        this.certificateRequestService.acceptRequest(serialNumber).subscribe({
+          next: (res) => {
+            this.snackBar.open('Successfully accepted and created', 'Close', {
+              duration: 3000,
+              verticalPosition: 'bottom',
+              horizontalPosition: 'center',
+            });
+          },
+        });
+      });
+    }
+
+    rejectRequests() {
+      let selectedCertificates = this.selection.selected;
+      let dialogRef: MatDialogRef<RejectDialogComponent>;
+  
+      const openNextForm = (certIndex: number) => {
+        if (certIndex < selectedCertificates.length) {
+          const dialogConfig = new MatDialogConfig();
+          dialogConfig.width = "300px"; 
+          dialogConfig.data = selectedCertificates[certIndex].serialNumber;
+          
+          dialogRef = this.matDialog.open(RejectDialogComponent, dialogConfig);
+          dialogRef.afterClosed().subscribe(() => {
+            openNextForm(certIndex + 1);
+          });
+        }
+      };
+      openNextForm(0);
     }
   }
   

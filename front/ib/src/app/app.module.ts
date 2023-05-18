@@ -41,6 +41,7 @@ import { RecaptchaModule,
   RECAPTCHA_V3_SITE_KEY,
   RecaptchaV3Module } from "ng-recaptcha";
 import { environment } from 'src/environments/environment';
+import { RejectDialogComponent } from './dialog/reject-dialog/reject-dialog.component';
 
 @NgModule({
   declarations: [
@@ -58,7 +59,8 @@ import { environment } from 'src/environments/environment';
     EmailForForgotPasswordComponent,
     TwoFactorAuthComponent,
     RevokeDialogComponent,
-    RenewPasswordComponent
+    RenewPasswordComponent,
+    RejectDialogComponent
   ],
   imports: [
     BrowserModule,

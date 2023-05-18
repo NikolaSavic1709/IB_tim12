@@ -19,15 +19,10 @@ public class RequestCreationDTO {
     @NotEmpty
     @NotBlank
     private String signatureAlgorithm;
-
-    @NotNull
-    @NotEmpty
-    @NotBlank
+    
     private String issuer;
 
     @NotNull
-    @NotEmpty
-    @NotBlank
     private CertificateType type;
 
     @NotNull

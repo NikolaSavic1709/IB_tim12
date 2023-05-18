@@ -79,10 +79,10 @@ public class CertificateRequestController {
 
 
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
-    @PutMapping(value = "/accept")
-    public ResponseEntity<?> acceptRequest(@RequestBody CertificateRequest certificateRequest,  @RequestHeader("Authorization") String token) {
+    @PutMapping(value = "/accept/{serialNumber}")
+    public ResponseEntity<?> acceptRequest(@PathVariable String serialNumber,  @RequestHeader("Authorization") String token) {
         try {
-            Certificate created = requestService.acceptRequest(certificateRequest, token);
+            Certificate created = requestService.acceptRequest(serialNumber, token);
             return new ResponseEntity<>(created, HttpStatus.OK);
         } catch (ForbiddenException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
@@ -91,10 +91,14 @@ public class CertificateRequestController {
     }
 
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
-    @PutMapping(value = "/reject/{id}") // id of certificate request
-    public ResponseEntity<?> rejectRequest(@RequestBody String rejectionReason, @PathVariable Integer id, @RequestHeader("Authorization") String token) {
-        requestService.rejectRequest(id, rejectionReason, token);
-        return new ResponseEntity<>(HttpStatus.OK);
+    @PutMapping(value = "/reject/{serialNumber}") // id of certificate request
+    public ResponseEntity<?> rejectRequest(@RequestBody String rejectionReason, @PathVariable String serialNumber, @RequestHeader("Authorization") String token) {
+        try {
+            requestService.rejectRequest(serialNumber, rejectionReason, token);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (ForbiddenException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
     }
 
 }

@@ -151,10 +151,10 @@ export class AuthService {
 
   isPasswordExpired(): boolean {
     if (localStorage.getItem('expiredPassword') === 'true') {
-      console.log('true');
+      //console.log('true');
       return true;
     }
-    console.log('false');
+    //console.log('false');
 
     return false;
   }
