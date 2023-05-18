@@ -25,13 +25,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 //Kontroler zaduzen za autentifikaciju korisnika
 @RestController
 @RequestMapping(value = "/api")
 @CrossOrigin
 public class AuthenticationController {
-
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
     @Autowired
     private TokenUtils tokenUtils;
 
@@ -47,12 +50,16 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody @Valid JwtAuthenticationRequest authenticationRequest) throws Exception {
 
+
+        logger.info(authenticationRequest.getEmail()+"---"+authenticationRequest.getPassword());
+
         if(!endUserService.checkUserEnabled(authenticationRequest.getEmail())){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid login");
         }
 
         String mfaType = authenticationRequest.getMfaType();
         if (!mfaType.equals("email") && !mfaType.equals("sms")) {
+            logger.error("check radio button");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("MFA is only possible via email or SMS");
         }
 
