@@ -52,14 +52,14 @@ public class AuthenticationController {
 
 
         logger.info(authenticationRequest.getEmail()+"---"+authenticationRequest.getPassword());
-
+        logger.error("cao cao");
         if(!endUserService.checkUserEnabled(authenticationRequest.getEmail())){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid login");
         }
 
         String mfaType = authenticationRequest.getMfaType();
         if (!mfaType.equals("email") && !mfaType.equals("sms")) {
-            logger.error("check radio button");
+
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("MFA is only possible via email or SMS");
         }
 
