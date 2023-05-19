@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,4 +19,14 @@ public class AccountActivationDTO {
     @Min(value = 100000)
     @Max(value = 999999)
     private Integer activationCode;
+
+
+    @Override
+    public String toString() {
+        return "AccountActivationDTO{" +
+                "activationType='" + activationType + '\'' +
+                ", activationResource='" + activationResource + '\'' +
+                ", activationCode=" + new BCryptPasswordEncoder().encode(activationCode.toString()) +
+                '}';
+    }
 }

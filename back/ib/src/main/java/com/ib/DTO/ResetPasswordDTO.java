@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,4 +31,14 @@ public class ResetPasswordDTO {
     @NotBlank
    // @Pattern(regexp = "^(?=.*\\d)(?=.*[A-Z])(?!.*[^a-zA-Z0-9@#$^+=])(.{8,15})$")
     private String newPassword;
+
+    @Override
+    public String toString() {
+        return "ResetPasswordDTO{" +
+                "activationType='" + activationType + '\'' +
+                ", activationResource='" + activationResource + '\'' +
+                ", code=" + new BCryptPasswordEncoder().encode(code.toString()) +
+                ", newPassword='" + new BCryptPasswordEncoder().encode(newPassword) + '\'' +
+                '}';
+    }
 }

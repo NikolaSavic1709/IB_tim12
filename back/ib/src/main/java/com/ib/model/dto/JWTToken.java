@@ -32,4 +32,5 @@ public class JWTToken {
         this.expiresIn = expiresIn;
     }
 
+
 }

@@ -21,4 +21,12 @@ public class ForgotPasswordDTO {
     @NotBlank
     @NotEmpty
     private String activationResource;
+
+    @Override
+    public String toString() {
+        return "ForgotPasswordDTO{" +
+                "activationType='" + activationType + '\'' +
+                ", activationResource='" + activationResource + '\'' +
+                '}';
+    }
 }

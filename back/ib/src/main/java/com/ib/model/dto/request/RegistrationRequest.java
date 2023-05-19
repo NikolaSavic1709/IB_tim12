@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Getter
 @Setter
@@ -51,4 +52,16 @@ public class RegistrationRequest {
         this.password = endUser.getPassword();
     }
 
+
+    @Override
+    public String toString() {
+        return "RegistrationRequest{" +
+                "name='" + name + '\'' +
+                ", surname='" + surname + '\'' +
+                ", telephoneNumber='" + telephoneNumber + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + new BCryptPasswordEncoder().encode(password) + '\'' +
+                ", userActivationType='" + userActivationType + '\'' +
+                '}';
+    }
 }
