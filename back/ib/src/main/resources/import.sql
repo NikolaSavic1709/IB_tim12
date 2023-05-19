@@ -1,7 +1,7 @@
 INSERT INTO AUTHORITY (name) VALUES ('END_USER');  --1
 INSERT INTO AUTHORITY (name) VALUES ('ADMIN');      --2
 
-INSERT INTO members (email, name, surname, telephone_number, password, authority_id, is_enabled, last_password_reset_date) VALUES ('jnizvodno@gmail.com', 'Bandjelo', 'Kumara', '+381621131440', '$2a$12$MQAddY3inyWPRpEVTRtNDu.TvnS6b/kUwt/6XMOG6xEfKYSJgikCm' ,2, true, '2023-05-18 23:49:28.330677');
+INSERT INTO members (email, name, surname, telephone_number, password, authority_id, is_enabled, last_password_reset_date) VALUES ('jnizvodno@gmail.com', 'Bandjelo', 'Kumara', '+381621131440', '$2a$12$MQAddY3inyWPRpEVTRtNDu.TvnS6b/kUwt/6XMOG6xEfKYSJgikCm' ,2, true, '2023-05-19 11:46:28.330677');
 INSERT INTO ADMINS(id) VALUES(1);--admin021
 INSERT INTO password (user_id, previous_passwords) VALUES (1, '$2a$10$j.RMb2Bzttn1x/Z.EDPNduWMzNLidG8Q.768w2qt484aC/E9Ha9am');
 

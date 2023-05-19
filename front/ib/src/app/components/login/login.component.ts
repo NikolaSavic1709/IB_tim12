@@ -45,28 +45,37 @@ export class LoginComponent {
       this.hasError = value;
     })
 
+    this.oauthService.getUserState().subscribe((user) => {
+      if (user){
+        this.oauthService.login(user.idToken).subscribe({
+          next: (result) => {
+            this.oauthService.loggedWithGoogle = true;
+            localStorage.setItem('user', JSON.stringify(result.accessToken));
+            this.authService.setUser();
+            this.router.navigate(['/certificates']);
+          },
+          error: (error) => {
+            if (error instanceof HttpErrorResponse) {
+              const errorCode = error.status;
+    
+              if (errorCode === 403) {
+                // account not registered
+                this.hasError=true;
+              } else {
+                this.hasError=true;
+              }
+            }
+          },
+        });
+
+      }
+      
+    });
+
     this.socialAuthService.authState.subscribe((user: SocialUser) => {
       // console.log(user);
-      this.oauthService.login(user.idToken).subscribe({
-        next: (result) => {
-          //console.log(result);
-          localStorage.setItem('user', JSON.stringify(result.accessToken));
-          this.authService.setUser();
-          this.router.navigate(['/certificates']);
-        },
-        error: (error) => {
-          if (error instanceof HttpErrorResponse) {
-            const errorCode = error.status;
-  
-            if (errorCode === 403) {
-              // account not registered
-              this.hasError=true;
-            } else {
-              this.hasError=true;
-            }
-          }
-        },
-      });
+      this.oauthService.setUserState(user);
+      
     });
   }
 
