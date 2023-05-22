@@ -1,10 +1,7 @@
 package com.ib.service.users.impl;
 
 import com.ib.DTO.AccountActivationDTO;
-import com.ib.exception.InvalidActivationResourceException;
-import com.ib.exception.MailSendingException;
-import com.ib.exception.SMSSendingException;
-import com.ib.exception.UserActivationExpiredException;
+import com.ib.exception.*;
 import com.ib.model.users.EndUser;
 import com.ib.model.users.User;
 import com.ib.model.users.UserActivation;
@@ -79,7 +76,7 @@ public class UserActivationService extends JPAService<UserActivation> implements
     public void create(EndUser user, String userActivationType) throws MailSendingException, SMSSendingException {
         Integer activationToken = generateToken();
 
-        UserActivation userActivation = new UserActivation( user, LocalDateTime.now() , LocalDateTime.now().plusMinutes(5), activationToken);
+        UserActivation userActivation = new UserActivation( user, LocalDateTime.now() , LocalDateTime.now().plusMinutes(5), activationToken, 3);
 
         userActivationRepository.deleteAllByUser(user);
         save(userActivation);
@@ -148,11 +145,21 @@ public class UserActivationService extends JPAService<UserActivation> implements
     }
 
     @Override
-    public void activate(AccountActivationDTO accountActivationDTO) throws EntityNotFoundException, UserActivationExpiredException, InvalidActivationResourceException {
+    public void activate(AccountActivationDTO accountActivationDTO) throws EntityNotFoundException, UserActivationExpiredException, InvalidActivationResourceException, SpamAuthException {
         UserActivation userActivation = getByToken(accountActivationDTO.getActivationCode());
 
         if (userActivation == null) {
+            EndUser user = getByResource(accountActivationDTO.getActivationType(),accountActivationDTO.getActivationResource());
+            UserActivation existingUserActivation = userActivationRepository.findByUser(user).orElseGet(null);
+            if (existingUserActivation != null){
+                existingUserActivation.setTokenRemainAttempts(existingUserActivation.getTokenRemainAttempts()-1);
+                save(existingUserActivation);
+            }
             throw new EntityNotFoundException("Activation with entered id does not exist!");
+        }
+
+        if (userActivation.getTokenRemainAttempts() <= 0) {
+            throw new SpamAuthException("You tried more than three times");
         }
 
         String activationResource = accountActivationDTO.getActivationResource();
@@ -161,6 +168,8 @@ public class UserActivationService extends JPAService<UserActivation> implements
                 : userActivation.getUser().getTelephoneNumber().equals(activationResource);
 
         if (!isValidActivationResource) {
+            userActivation.setTokenRemainAttempts(userActivation.getTokenRemainAttempts()-1);
+            save(userActivation);
             throw new InvalidActivationResourceException("Invalid " + accountActivationDTO.getActivationType()+" activation");
         }
 
@@ -174,5 +183,12 @@ public class UserActivationService extends JPAService<UserActivation> implements
 
     private UserActivation getByToken(Integer token) {
         return userActivationRepository.findByToken(token).orElse(null);
+    }
+
+    private EndUser getByResource(String activationType, String activationResource) throws EntityNotFoundException{
+        if (activationType.equals("email")){
+            return userRepository.findByEmail(activationResource);
+        }
+        return  userRepository.findByTelephoneNumber(activationResource);
     }
 }

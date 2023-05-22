@@ -18,7 +18,8 @@ public class UserService implements IUserService, UserDetailsService {
 
     @Override
     public User findByEmail(String email) {
-        return userRepository.findByEmail(email).orElseGet(null);
+        User user = userRepository.findByEmail(email).orElse(null);
+        return user;
     }
 
     @Override

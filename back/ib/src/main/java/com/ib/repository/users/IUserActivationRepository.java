@@ -12,5 +12,7 @@ import java.util.Optional;
 public interface IUserActivationRepository extends JpaRepository<UserActivation, Integer> {
 
     public Optional<UserActivation> findByToken(Integer token);
+
+    public Optional<UserActivation> findByUser(EndUser user);
     public void deleteAllByUser(EndUser user);
 }

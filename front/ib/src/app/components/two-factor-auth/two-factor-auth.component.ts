@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { AfterContentInit, Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LoginMFARequest } from 'src/app/model/LoginRequest';
@@ -10,8 +10,9 @@ import { ReCaptchaV3Service } from 'ng-recaptcha';
   templateUrl: './two-factor-auth.component.html',
   styleUrls: ['./two-factor-auth.component.css']
 })
-export class TwoFactorAuthComponent {
+export class TwoFactorAuthComponent implements AfterContentInit{
   hasError: boolean;
+  error: string;
   token: number;
   email: string|null|undefined;
   password: string|null|undefined;
@@ -30,6 +31,7 @@ export class TwoFactorAuthComponent {
     this.email = '';
     this.password = '';
     this.hasError = false;
+    this.error = '';
   }
 
   ngOnInit(): void {
@@ -44,7 +46,16 @@ export class TwoFactorAuthComponent {
     this.password = this.authService.password;
     this.authService.hasErrorObs.subscribe((value) => {
       this.hasError = value;
-    })
+    });
+
+    this.authService.errorObs.subscribe((value) => {
+      this.error = value;
+    });
+  }
+
+  ngAfterContentInit(): void {
+    this.hasError = false;
+    this.error = '';
   }
 
   toLoginMFA() {

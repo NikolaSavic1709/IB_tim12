@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { AfterContentInit, Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ResetService } from 'src/app/service/reset.service';
@@ -10,7 +10,7 @@ import { ReCaptchaV3Service } from 'ng-recaptcha';
   templateUrl: './forgot-password.component.html',
   styleUrls: ['./forgot-password.component.css']
 })
-export class ForgotPasswordComponent {
+export class ForgotPasswordComponent implements AfterContentInit{
   hasError = false;
 
   forgot = new FormGroup({
@@ -22,6 +22,10 @@ export class ForgotPasswordComponent {
   constructor(private router: Router,
     private resetService: ResetService,
     private reCaptchaV3Service: ReCaptchaV3Service) {
+  }
+
+  ngAfterContentInit(): void {
+    this.hasError = false;
   }
 
   toReset() {

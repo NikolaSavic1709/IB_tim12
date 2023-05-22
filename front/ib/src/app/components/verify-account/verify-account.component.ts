@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { AfterContentInit, Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RegistrationService } from 'src/app/service/registration.service';
@@ -9,7 +9,7 @@ import { ReCaptchaV3Service } from 'ng-recaptcha';
   templateUrl: './verify-account.component.html',
   styleUrls: ['./verify-account.component.css']
 })
-export class VerifyAccountComponent {
+export class VerifyAccountComponent implements AfterContentInit{
 
   hasError: boolean;
   token: number;
@@ -42,6 +42,10 @@ export class VerifyAccountComponent {
     //   );
     this.activationResource = this.registrationService.activationResource;
     this.activationType = this.registrationService.activationType;
+  }
+
+  ngAfterContentInit(): void {
+    this.hasError = false;
   }
 
   toVerify() {

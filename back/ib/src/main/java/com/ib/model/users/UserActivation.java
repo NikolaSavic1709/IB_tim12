@@ -28,6 +28,10 @@ public class UserActivation {
     @NotNull
     private Integer token;
 
+    @Column(name = "token_remain_attempts", nullable = false)
+    @NotNull
+    private Integer tokenRemainAttempts;
+
     @Column(name = "creation_date", nullable = false)
     @NotNull
     private LocalDateTime creationDate;
@@ -36,10 +40,11 @@ public class UserActivation {
     @NotNull
     private LocalDateTime expiryDate;
 
-    public UserActivation(EndUser user, LocalDateTime creationDate, LocalDateTime expiryDate, Integer token) {
+    public UserActivation(EndUser user, LocalDateTime creationDate, LocalDateTime expiryDate, Integer token, Integer tokenRemainAttempts) {
         this.user = user;
         this.creationDate = creationDate;
         this.expiryDate = expiryDate;
         this.token = token;
+        this.tokenRemainAttempts = tokenRemainAttempts;
     }
 }

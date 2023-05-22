@@ -1,5 +1,5 @@
 import {HttpErrorResponse} from '@angular/common/http';
-import {Component, OnInit, SecurityContext} from '@angular/core';
+import {AfterContentInit, Component, OnInit, SecurityContext} from '@angular/core';
 import {FormGroup, FormControl, Validators, ValidatorFn, AbstractControl, ValidationErrors} from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import {Router} from '@angular/router';
@@ -11,10 +11,11 @@ import { ReCaptchaV3Service } from 'ng-recaptcha';
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })
-export class RegisterComponent {
+export class RegisterComponent implements AfterContentInit{
   hidePassword = true;
   hideConfirmPassword = true;
   hasError = false;
+  error = '';
   submitted = false;
 
   allTextPattern = "[a-zA-Z][a-zA-Z]*";
@@ -39,7 +40,16 @@ export class RegisterComponent {
   ngOnInit(): void {
     this.registrationService.hasErrorObs.subscribe((value)=>{
       this.hasError=value;
-    })
+    });
+
+    this.registrationService.errorObs.subscribe((value)=>{
+      this.error=value;
+    });
+  }
+
+  ngAfterContentInit(): void {
+    this.hasError = false;
+    this.error = '';
   }
 
   sanitizeInput(input: string): string {

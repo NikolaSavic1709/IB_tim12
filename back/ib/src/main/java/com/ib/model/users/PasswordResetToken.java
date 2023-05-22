@@ -26,6 +26,10 @@ public class PasswordResetToken {
     @NotNull
     private Integer token;
 
+    @Column(name = "token_ramain_attempts", nullable = false)
+    @NotNull
+    private Integer tokenRemainAttempts;
+
     @OneToOne(targetEntity = User.class, fetch = FetchType.EAGER)
     @NotNull
     @JoinColumn(nullable = false, name = "user_id")

@@ -75,6 +75,9 @@ public class User implements UserDetails {
     @Column(name = "mfa_token")
     private Integer MFAToken;
 
+    @Column(name = "mfa_token_remain_attempts")
+    private Integer MFATokenRemainAttempts;
+
     @Column(name = "mfa_expiry_date")
     private LocalDateTime MFATokenExpiryDate;
 

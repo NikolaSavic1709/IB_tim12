@@ -15,6 +15,9 @@ export class AuthService {
 
   hasError=new BehaviorSubject<boolean>(false);
   hasErrorObs=this.hasError.asObservable();
+
+  error=new BehaviorSubject<string>('');
+  errorObs=this.error.asObservable();
   
   public email:string|null|undefined='';
   public password:string|null|undefined='';
@@ -50,6 +53,7 @@ export class AuthService {
         this.password = login.password;
         this.router.navigate(['/two-factor-auth']);
         this.hasError.next(false);
+        this.error.next('');
       },
       error: (error) => {
         if (error instanceof HttpErrorResponse) {
@@ -60,6 +64,7 @@ export class AuthService {
             this.router.navigate(['/renew-password'])
           } else {
             this.hasError.next(true);
+            this.error.next('Wrong username or password!');
           }
         }
       },
@@ -95,9 +100,14 @@ export class AuthService {
           const errorCode = error.status;
 
           if (errorCode === 403) {
-
+            this.hasError.next(true);
+            this.error.next('You tried more than three times!');
+          } else if (errorCode === 400) {
+            this.hasError.next(true);
+            this.error.next('Verification code expired!');
           } else {
             this.hasError.next(true);
+            this.error.next('Wrong verification code!');
           }
         }
       },

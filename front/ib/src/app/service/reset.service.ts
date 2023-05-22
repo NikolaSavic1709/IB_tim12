@@ -26,10 +26,12 @@ export class ResetService {
       skip: 'true', recaptcha:token
     });
 
-    return this.http.post(environment.apiHost + "forgotPassword",{
+    const forgotPassword :ForgotPasswordDTO={
       activationType: type,
-      activationResource: resource,
-    }, 
+      activationResource: resource
+    };
+
+    return this.http.post(environment.apiHost + "forgotPassword",forgotPassword, 
       {headers: recaptchaHeaders, responseType: 'text'})
   }
 
@@ -46,6 +48,11 @@ export class ResetService {
 export interface ResetPasswordDTO{
   "code": number,
   "newPassword": string,
+  "activationType":string,
+  "activationResource":string,
+}
+
+export interface ForgotPasswordDTO{
   "activationType":string,
   "activationResource":string,
 }

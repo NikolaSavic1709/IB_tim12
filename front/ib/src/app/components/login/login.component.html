@@ -49,7 +49,7 @@
       <button [disabled]="!loginForm.valid" type="submit" id="loginbtn">LOGIN</button>
 
       <mat-error *ngIf="hasError">
-        <span class="login-error">Wrong username or password</span>
+        <span class="login-error">{{error}}</span>
       </mat-error>
 
       <p id="forgotPass" (click)="toForgot()">Forgot password</p>

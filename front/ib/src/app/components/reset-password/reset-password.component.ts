@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { AfterContentInit, Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { match } from '../register/register.component';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -11,29 +11,31 @@ import { ReCaptchaV3Service } from 'ng-recaptcha';
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.scss']
 })
-export class ResetPasswordComponent {
+export class ResetPasswordComponent implements AfterContentInit{
   hasError: boolean;
+  error: string;
   token: number;
-  activationType:string|null|undefined;
-  activationResource:string|null|undefined;
+  activationType: string | null | undefined;
+  activationResource: string | null | undefined;
   hidePassword = true;
   hideConfirmPassword = true;
 
   reset = new FormGroup({
-    token: new FormControl('', [Validators.minLength(6),Validators.maxLength(6), Validators.required]),
+    token: new FormControl('', [Validators.minLength(6), Validators.maxLength(6), Validators.required]),
     password: new FormControl('', [Validators.minLength(8), Validators.required]),
     confirmPassword: new FormControl('', [Validators.required]),
-  }, {validators: [match('password', 'confirmPassword')]});
+  }, { validators: [match('password', 'confirmPassword')] });
 
 
   constructor(private router: Router,
-              private route: ActivatedRoute,
-              private resetService: ResetService,
-              private reCaptchaV3Service: ReCaptchaV3Service) {
+    private route: ActivatedRoute,
+    private resetService: ResetService,
+    private reCaptchaV3Service: ReCaptchaV3Service) {
     this.token = 0;
-    this.activationResource='';
-    this.activationType='';
+    this.activationResource = '';
+    this.activationType = '';
     this.hasError = false;
+    this.error = '';
   }
 
   ngOnInit(): void {
@@ -46,6 +48,11 @@ export class ResetPasswordComponent {
     //   );
     this.activationType = this.resetService.type;
     this.activationResource = this.resetService.resource;
+  }
+
+  ngAfterContentInit(): void {
+    this.hasError = false;
+    this.error = '';
   }
 
   toChange() {
@@ -63,14 +70,26 @@ export class ResetPasswordComponent {
         .subscribe((token) => {
           //console.log(token);
           //this.handleToken(token));
-          
-          this.resetService.changePasswordWithResetCode(resetPasswordDTO,token).subscribe({
+
+          this.resetService.changePasswordWithResetCode(resetPasswordDTO, token).subscribe({
             next: (result) => {
               this.router.navigate(['/password-changed']);
             },
             error: (error) => {
               if (error instanceof HttpErrorResponse) {
                 this.hasError = true;
+                const errorCode = error.status;
+
+                if (errorCode === 403) {
+                  this.hasError = true;
+                  this.error = 'You tried more than three times!';
+                } else if (errorCode === 400) {
+                  this.hasError = true;
+                  this.error = 'Reset code expired!';
+                } else {
+                  this.hasError = true;
+                  this.error = 'Wrong reset code!';       
+                }
               }
             },
           });

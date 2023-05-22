@@ -115,6 +115,8 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (UserMFAExpiredException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (SpamAuthException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }
 
         User user = (User) authentication.getPrincipal();
@@ -188,6 +190,8 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid activation");
         } catch (UserActivationExpiredException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Activation expired. Register again!");
+        } catch (SpamAuthException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }
     }
 
@@ -229,10 +233,12 @@ public class AuthenticationController {
         try {
             endUserService.resetPassword(resetPasswordDTO);
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Password successfully changed!");
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body( "User does not exist!");
-        } catch (IncorrectCodeException | CodeExpiredException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Code is expired or not correct!");
+        } catch (IncorrectCodeException | EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body( "Wrong reset code!");
+        } catch (CodeExpiredException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Code is expired!");
+        } catch (SpamAuthException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }
     }
 

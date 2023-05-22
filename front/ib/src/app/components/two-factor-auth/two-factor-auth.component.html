@@ -18,7 +18,7 @@
             <button type="submit" id="loginbtn">VERIFY</button>
 
             <mat-error *ngIf="hasError" >
-              <span class="res-error" >Verification code expired!</span>
+              <span class="res-error" >{{error}}</span>
             </mat-error>
 
             <div id="toLogin">

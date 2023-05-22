@@ -17,6 +17,10 @@ export class RegistrationService {
 
   private hasError=new BehaviorSubject<boolean>(false);
   hasErrorObs=this.hasError.asObservable();
+
+  private error=new BehaviorSubject<string>('');
+  errorObs=this.error.asObservable();
+
   private headers = new HttpHeaders({
     skip: 'true',
   });
@@ -38,6 +42,7 @@ export class RegistrationService {
       error: (error) => {
         if (error instanceof HttpErrorResponse) {
           this.hasError.next(true);
+          this.error.next('Email already exists');
         }
       },
     });

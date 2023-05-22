@@ -4,10 +4,7 @@ import com.ib.DTO.ForgotPasswordDTO;
 import com.ib.DTO.RenewPasswordDTO;
 import com.ib.DTO.ResetPasswordDTO;
 import com.ib.exception.*;
-import com.ib.model.users.Authority;
-import com.ib.model.users.EndUser;
-import com.ib.model.users.PasswordResetToken;
-import com.ib.model.users.User;
+import com.ib.model.users.*;
 import com.ib.repository.users.IEndUserRepository;
 import com.ib.repository.users.IPasswordResetTokenRepository;
 import com.ib.repository.users.IUserRepository;
@@ -112,6 +109,7 @@ public class EndUserService {
 
         User user = userRepository.findByEmail(email).orElseGet(null);
         user.setMFAToken(mfaToken);
+        user.setMFATokenRemainAttempts(3);
         user.setMFATokenExpiryDate(LocalDateTime.now().plusMinutes(5));
         user = userRepository.save(user);
         if (mfaType.equals("email")){
@@ -170,17 +168,28 @@ public class EndUserService {
                 + "<p>Your MFA code is: <b>" + token + "</b></p>";
     }
 
-    public void checkMFA(String email, Integer token) throws InvalidUserException, UserMFAExpiredException {
+    public void checkMFA(String email, Integer token) throws InvalidUserException, UserMFAExpiredException, SpamAuthException {
         User user = userRepository.findByEmail(email).orElseGet(null);
         if (user==null)
             throw new InvalidUserException("Invalid user");
-        if (!user.getMFAToken().equals(token))
+
+        if (user.getMFATokenRemainAttempts()<=0)
+            throw new SpamAuthException("You tried more than three times");
+
+        if (!user.getMFAToken().equals(token)){
+            user.setMFATokenRemainAttempts(user.getMFATokenRemainAttempts()-1);
+            userRepository.save(user);
             throw new InvalidUserException("Invalid mfa token");
-        if (user.getMFATokenExpiryDate().isBefore(LocalDateTime.now()))
+        }
+
+        if (user.getMFATokenExpiryDate().isBefore(LocalDateTime.now())){
             throw new UserMFAExpiredException("MFA token expired. Try again!");
+        }
+
 
         user.setMFATokenExpiryDate(null);
         user.setMFAToken(null);
+        user.setMFATokenRemainAttempts(0);
         userRepository.save(user);
     }
 
@@ -211,7 +220,7 @@ public class EndUserService {
         token.setUser(user);
         token.setToken(generateToken());
         token.setTokenExpiryDate(LocalDateTime.now().plusMinutes(5));
-
+        token.setTokenRemainAttempts(3);
         passwordResetTokenRepository.deleteAllByUser(user);
         return passwordResetTokenRepository.save(token);
     }
@@ -252,10 +261,20 @@ public class EndUserService {
                 + "<p>Your code for password reset is: <b>" + token + "</b></p>";
     }
 
-    public void resetPassword(ResetPasswordDTO resetPasswordDTO) throws IncorrectCodeException, CodeExpiredException, EntityNotFoundException {
+    public void resetPassword(ResetPasswordDTO resetPasswordDTO) throws IncorrectCodeException, CodeExpiredException, EntityNotFoundException, SpamAuthException {
         PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByToken(resetPasswordDTO.getCode()).orElse(null);
         if (passwordResetToken == null) {
+            User user = getByResource(resetPasswordDTO.getActivationType(),resetPasswordDTO.getActivationResource());
+            PasswordResetToken existingPasswordResetToken = passwordResetTokenRepository.findByUser(user).orElseGet(null);
+            if (existingPasswordResetToken != null){
+                existingPasswordResetToken.setTokenRemainAttempts(existingPasswordResetToken.getTokenRemainAttempts()-1);
+                passwordResetTokenRepository.save(existingPasswordResetToken);
+            }
             throw new IncorrectCodeException("Code is expired or not correct!");
+        }
+
+        if (passwordResetToken.getTokenRemainAttempts() <= 0) {
+            throw new SpamAuthException("You tried more than three times");
         }
 
         User user;
@@ -267,6 +286,8 @@ public class EndUserService {
         }
 
         if (user==null || user!=passwordResetToken.getUser()){
+            passwordResetToken.setTokenRemainAttempts(passwordResetToken.getTokenRemainAttempts()-1);
+            passwordResetTokenRepository.save(passwordResetToken);
             throw new IncorrectCodeException("Code is expired or not correct!");
         }
         if (passwordResetToken.getTokenExpiryDate().isBefore(LocalDateTime.now())) {
@@ -297,5 +318,12 @@ public class EndUserService {
         } else {
             throw new PasswordNotMatchingException();
         }
+    }
+
+    private User getByResource(String activationType, String activationResource) throws EntityNotFoundException{
+        if (activationType.equals("email")){
+            return userRepository.findByEmail(activationResource).orElseThrow(EntityNotFoundException::new);
+        }
+        return  userRepository.findByTelephoneNumber(activationResource);
     }
 }

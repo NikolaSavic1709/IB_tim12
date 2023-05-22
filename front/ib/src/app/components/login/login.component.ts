@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterContentInit, AfterViewInit, Component, OnInit } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LoginRequest } from 'src/app/model/LoginRequest';
@@ -15,7 +15,7 @@ import { Subscription } from 'rxjs';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent {
+export class LoginComponent implements AfterContentInit{
 
   hide = true;
   submitted = false;
@@ -27,6 +27,7 @@ export class LoginComponent {
     keepLogin: new FormControl(),
   });
   hasError = false;
+  error = '';
 
   constructor(private authService: AuthService,
     private router: Router,
@@ -38,15 +39,26 @@ export class LoginComponent {
 
     this.authService.setUser();
   }
-
+  
+  
+  ngAfterContentInit(): void {
+    this.hasError = false;
+    this.error = '';
+  }
 
   ngOnInit(): void {
     this.authService.hasErrorObs.subscribe((value) => {
       this.hasError = value;
     })
 
+    this.authService.errorObs.subscribe((value) => {
+      this.error = value;
+    })
+
     this.oauthService.getUserState().subscribe((user) => {
       if (user){
+        this.oauthService.clearUserState();
+        this.socialAuthService.signOut(true);
         this.oauthService.login(user.idToken).subscribe({
           next: (result) => {
             this.oauthService.loggedWithGoogle = true;
@@ -58,11 +70,13 @@ export class LoginComponent {
             if (error instanceof HttpErrorResponse) {
               const errorCode = error.status;
     
-              if (errorCode === 403) {
+              if (errorCode === 400) {
                 // account not registered
                 this.hasError=true;
+                this.error = 'You can not login using this Goggle account!';
               } else {
                 this.hasError=true;
+                this.error = 'You can not login using this Goggle account!';
               }
             }
           },
@@ -100,10 +114,6 @@ export class LoginComponent {
 
   toForgot() {
     this.router.navigate(['/forgot-password']);
-  }
-
-  toGoogleOAuth() {
-    window.location.href = "https://accounts.google.com";
   }
 
   toSignup() {
