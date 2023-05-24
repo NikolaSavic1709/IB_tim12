@@ -69,6 +69,12 @@ public class EndUserService {
         return user != null && enabled;
     }
 
+    public void setStandardAuth(String email) {
+        User user = userRepository.findByEmail(email).orElseGet(null);;
+        user.setOauth(false);
+        userRepository.save(user);
+    }
+
     public EndUser save(EndUser endUser) { return endUserRepository.save(endUser);};
 
 
@@ -78,6 +84,7 @@ public class EndUserService {
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
         newUser.setLastPasswordResetDate(LocalDateTime.now());
         newUser.setEnabled(false);
+        newUser.setOauth(false);
         checkIFUserResourcesAreUsed(newUser);
         save(newUser);
 
@@ -111,6 +118,7 @@ public class EndUserService {
         user.setMFAToken(mfaToken);
         user.setMFATokenRemainAttempts(3);
         user.setMFATokenExpiryDate(LocalDateTime.now().plusMinutes(5));
+        user.setOauth(false);
         user = userRepository.save(user);
         if (mfaType.equals("email")){
             try {

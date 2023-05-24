@@ -52,10 +52,7 @@ public class User implements UserDetails {
     @NotBlank
     private String surname;
 
-    @NotNull
-    @NotEmpty
-    @NotBlank
-    @Column(name = "telephone_number", nullable = false)
+    @Column(name = "telephone_number", nullable = true)
     private String telephoneNumber;
 
     @Column(name = "password", nullable = false)
@@ -71,6 +68,9 @@ public class User implements UserDetails {
 
     @Column(name="is_enabled")
     private boolean isEnabled;
+
+    @Column(name="is_oauth")
+    private boolean isOauth;
 
     @Column(name = "mfa_token")
     private Integer MFAToken;
@@ -133,6 +133,7 @@ public class User implements UserDetails {
         this.authority = authority;
         this.isEnabled = isEnabled;
         this.passwordHistory = new ArrayList<String>();
+        this.isOauth = false;
     }
 
     public void addPassword(String password) {

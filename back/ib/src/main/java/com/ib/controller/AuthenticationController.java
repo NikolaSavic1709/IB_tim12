@@ -105,6 +105,7 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid login");
         }
 
+        endUserService.setStandardAuth(authenticationRequest.getEmail());
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 authenticationRequest.getEmail(), authenticationRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -254,5 +255,30 @@ public class AuthenticationController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
+
+    @PutMapping(value = "/user/update/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable("id") Integer id, @RequestBody UserUpdateDTO userUpdateDTO, @RequestHeader HttpHeaders headers) {
+//        if (!headers.containsKey("recaptcha")){
+//            throw new BadCredentialsException("Invalid reCaptcha token");
+//        }
+        User user;
+        try {
+             user = userService.update(id, userUpdateDTO);
+        } catch (InvalidUserException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+
+        return new ResponseEntity<>(new UserUpdateDTO(user), HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/user/{id}")
+    public ResponseEntity<?> getUser(@PathVariable("id") Integer id) {
+
+        User user = userService.get(id);
+        if (user == null)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid user");
+
+        return new ResponseEntity<>(new UserUpdateDTO(user), HttpStatus.OK);
     }
 }

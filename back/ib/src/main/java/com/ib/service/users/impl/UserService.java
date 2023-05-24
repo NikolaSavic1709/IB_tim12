@@ -1,5 +1,7 @@
 package com.ib.service.users.impl;
 
+import com.ib.DTO.UserUpdateDTO;
+import com.ib.exception.*;
 import com.ib.model.users.User;
 import com.ib.repository.users.IUserRepository;
 import com.ib.service.users.interfaces.IUserService;
@@ -37,4 +39,13 @@ public class UserService implements IUserService, UserDetailsService {
         }
     }
 
+    @Override
+    public User update(Integer id, UserUpdateDTO userUpdateDTO) throws InvalidUserException {
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) throw new InvalidUserException("Invalid user");
+        user.setName(userUpdateDTO.getName());
+        user.setSurname(userUpdateDTO.getSurname());
+        user.setTelephoneNumber(userUpdateDTO.getTelephoneNumber());
+        return userRepository.save(user);
+    }
 }
