@@ -1,0 +1,68 @@
+<div id="background">
+    <div id="container">
+
+        <h1>Profile</h1>
+
+        <div id="content">
+
+            <form [formGroup]="editForm" (ngSubmit)="editProfile()">
+
+                <mat-form-field appearance="outline" class="field">
+                    <mat-label>Email</mat-label>
+                    <input matInput type="email" [(ngModel)]="profile.email" placeholder="name@example.com"
+                        name="email" formControlName="email" readonly>
+                </mat-form-field>
+
+
+                <mat-form-field class="field" appearance="outline">
+                    <mat-label>Name</mat-label>
+                    <input matInput type="text" [(ngModel)]="profile.name" placeholder="John" name="name"
+                        formControlName="name">
+                    <mat-error *ngIf="editForm.get('name')?.invalid && editForm.get('name')?.touched">
+                        <span *ngIf="editForm.get('name')?.errors?.['pattern']" class="input-error">Not valid
+                            format</span>
+                        <span *ngIf="editForm.get('name')?.errors?.['required']" class="input-error">Field is
+                            required</span>
+                    </mat-error>
+                </mat-form-field>
+
+                <mat-form-field class="field" appearance="outline">
+                    <mat-label>Surname</mat-label>
+                    <input matInput type="text" [(ngModel)]="profile.surname" placeholder="Doe" name="surname"
+                        formControlName="surname">
+                    <mat-error *ngIf="editForm.get('surname')?.invalid && editForm.get('surname')?.touched">
+                        <span *ngIf="editForm.get('surname')?.errors?.['pattern']" class="input-error">Not valid
+                            format</span>
+                        <span *ngIf="editForm.get('surname')?.errors?.['required']" class="input-error">Field is
+                            required</span>
+                    </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="field">
+                    <mat-label>Phone number</mat-label>
+                    <input matInput type="text" [(ngModel)]="profile.telephoneNumber" placeholder="0123456789"
+                        name="phoneNumber" formControlName="phoneNumber">
+                    <mat-error *ngIf="editForm.get('phoneNumber')?.invalid && editForm.get('phoneNumber')?.touched">
+                        <span
+                            *ngIf="editForm.get('phoneNumber')?.errors?.['minlength'] ||
+                    editForm.get('phoneNumber')?.errors?.['maxlength'] || editForm.get('phoneNumber')?.errors?.['pattern']"
+                            class="input-error">Not valid format</span>
+                        <span *ngIf="editForm.get('phoneNumber')?.errors?.['required']" class="input-error">Field is
+                            required</span>
+                    </mat-error>
+                </mat-form-field>
+
+
+                <button type="submit" id="loginbtn" [disabled]="!editForm.valid">UPDATE</button>
+
+                <mat-error *ngIf="hasError">
+                    <span class="signup-error">{{error}}</span>
+                </mat-error>
+
+
+            </form>
+
+
+        </div>
+    </div>
+</div>

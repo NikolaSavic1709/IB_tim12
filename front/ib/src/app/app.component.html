@@ -19,9 +19,9 @@
 <mat-sidenav-container>
   <mat-sidenav #sidenav>
     <mat-nav-list *ngIf="isAuthenticated()" >
-
       <a mat-list-item [routerLink]="'/certificates'"> Certificates </a>
       <a mat-list-item [routerLink]="'/requests'"> Requests </a>
+      <a mat-list-item [routerLink]="'/profile'"> Profile </a>
       <a mat-list-item (click)="logout(); sidenav.toggle(); "> Logout </a>
 
     </mat-nav-list>

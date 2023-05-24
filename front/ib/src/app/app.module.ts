@@ -44,7 +44,8 @@ import { environment } from 'src/environments/environment';
 import { RejectDialogComponent } from './dialog/reject-dialog/reject-dialog.component';
 import { GoogleInitOptions, GoogleLoginProvider, SocialAuthServiceConfig } from '@abacritt/angularx-social-login';
 import {GoogleSigninButtonModule} from "@abacritt/angularx-social-login";
-
+import { ProfileComponent } from './components/profile/profile.component';
+import { FormsModule } from '@angular/forms';
 const googleLoginOptions: GoogleInitOptions = {
   oneTapEnabled: false, // default is true
   scopes: 'email profile https://www.googleapis.com/auth/user.phonenumbers.read'
@@ -67,7 +68,8 @@ const googleLoginOptions: GoogleInitOptions = {
     TwoFactorAuthComponent,
     RevokeDialogComponent,
     RenewPasswordComponent,
-    RejectDialogComponent
+    RejectDialogComponent,
+    ProfileComponent
   ],
   imports: [
     BrowserModule,
@@ -91,7 +93,8 @@ const googleLoginOptions: GoogleInitOptions = {
     RecaptchaModule,
     RecaptchaFormsModule,
     RecaptchaV3Module,
-    GoogleSigninButtonModule
+    GoogleSigninButtonModule,
+    FormsModule
   ],
   providers: [
     {

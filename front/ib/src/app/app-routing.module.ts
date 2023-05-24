@@ -16,11 +16,15 @@ import { TwoFactorAuthComponent } from './components/two-factor-auth/two-factor-
 import { RenewPasswordGuard } from './guard/renew-password.guard';
 import { RenewPasswordComponent } from './components/renew-password/renew-password.component';
 import { NotRenewPasswordGuard } from './guard/not-renew-password.guard';
+import { ProfileComponent } from './components/profile/profile.component';
 
 const routes: Routes = [
   { path: 'certificates', component: MainPageComponent,
     canActivate: [NotLoggedInGuard]
- },
+  },
+  { path: 'profile', component: ProfileComponent,
+    canActivate: [NotLoggedInGuard]
+  },
   { path: 'requests', component: RequestPageComponent,
   canActivate: [NotLoggedInGuard] },  //renew
   { path: 'login', component: LoginComponent,

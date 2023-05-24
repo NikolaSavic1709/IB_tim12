@@ -1,0 +1,130 @@
+#background {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#container {
+    box-sizing: border-box;
+    position: absolute;
+    width: 600px;
+    height: 90%;
+    margin-top: 60px;
+    background: white;
+    border: 2px solid rgb(51, 51, 51);
+    box-shadow: 0 0 50px 5px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    font-weight: 400;
+    font-size: 16px;
+    color: rgb(51, 51, 51);
+}
+
+#content {
+  width: 80%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+h1 {
+    font-weight: 500;
+    font-size: 50px;
+    line-height: 82px;
+    letter-spacing: 0.1px;  
+}
+
+
+form {
+    margin-bottom: 50px;
+    margin-top: 0px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    text-align: center;
+}
+
+.field-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.field {
+    margin: 0.3em 0;
+    width: 100%;
+}
+
+
+.input-error {
+    font-size: 0.8rem;
+}
+
+.signup-error {
+    color: rgb(255, 103, 103);
+    font-size: 0.8rem;
+    position: relative;
+    top: 0.5rem;
+}
+
+#radio{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: start;
+    margin-bottom: 20px;
+    margin-top: -10px;
+  }
+
+  #radio p{
+    font-weight: 500;
+    margin-bottom: 0;
+    margin-left: 10px;
+  }
+
+  #loginbtn {
+    transition: all .5s ease;
+    background: #1a1a1a;
+    box-shadow: 0px 4px 4px rgba(100, 100, 100, 0.397);
+
+    height: 45px;
+  
+    align-items: center;
+    text-align: center;
+    letter-spacing: 0.3px;
+    font-weight: 800;
+    font-size: 16px;
+    color: #e2e2e2;
+  }
+  
+  #loginbtn:hover {
+    transform: translateY(-0.25em);
+    background: #c5c5c5;
+    border: 3px solid black;
+    box-shadow: 0px 4px 4px rgba(15, 15, 15, 0.397);
+    color: #1a1a1a;
+  }
+
+#toLogin {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    position: relative;
+    top: 5%;
+
+}
+
+#login {
+    font-weight: bold;
+    cursor: pointer;
+    margin: 0 5px;
+}
