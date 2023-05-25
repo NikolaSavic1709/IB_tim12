@@ -38,4 +38,15 @@ public class CertificateDTO {
         this.type=certificate.getType();
         this.serialNumber = certificate.getSerialNumber();
     }
+
+    @Override
+    public String toString() {
+        return "CertificateDTO{" +
+                "startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", type=" + type +
+                ", email='" + email + '\'' +
+                ", serialNumber='" + serialNumber + '\'' +
+                '}';
+    }
 }

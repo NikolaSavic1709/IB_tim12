@@ -63,7 +63,7 @@ public class EndUserService {
     }
 
     public boolean checkUserEnabled(String email) {
-        User user = userRepository.findByEmail(email).orElseGet(null);;
+        User user = (userRepository.findByEmail(email)).orElse(null);
         Boolean enabled = userRepository.findEnabledByEmail(email);
         return user != null && enabled;
     }

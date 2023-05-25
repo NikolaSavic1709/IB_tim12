@@ -21,4 +21,14 @@ public class RequestCreationDTO {
 
     @Email(regexp = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
     private String email;
+
+    @Override
+    public String toString() {
+        return "RequestCreationDTO{" +
+                "signatureAlgorithm='" + signatureAlgorithm + '\'' +
+                ", issuer='" + issuer + '\'' +
+                ", type=" + type +
+                ", email='" + email + '\'' +
+                '}';
+    }
 }

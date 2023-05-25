@@ -33,4 +33,14 @@ public class CertificateRequest {
         this.status = RequestStatus.PENDING;
         this.rejectionReason = null;
     }
+
+    @Override
+    public String toString() {
+        return "CertificateRequest{" +
+                "id=" + id +
+                ", certificate=" + certificate +
+                ", status=" + status +
+                ", rejectionReason='" + rejectionReason + '\'' +
+                '}';
+    }
 }

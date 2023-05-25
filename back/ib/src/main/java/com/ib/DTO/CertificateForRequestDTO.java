@@ -44,4 +44,20 @@ public class CertificateForRequestDTO {
         this.type = request.getCertificate().getType();
         this.email = request.getCertificate().getEmail();
     }
+
+    @Override
+    public String toString() {
+        return "CertificateForRequestDTO{" +
+                "requestStatus=" + requestStatus +
+                ", rejectionReason='" + rejectionReason + '\'' +
+                ", serialNumber='" + serialNumber + '\'' +
+                ", signatureAlgorithm='" + signatureAlgorithm + '\'' +
+                ", issuer='" + issuer + '\'' +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", certificateStatus=" + certificateStatus +
+                ", type=" + type +
+                ", email='" + email + '\'' +
+                '}';
+    }
 }
