@@ -32,6 +32,10 @@
         <appender-ref ref="file" />
         <appender-ref ref="console" />
     </logger>
+    <logger name="com.ib.aspects.RepositoryLoggingAspect" level="info">
+        <appender-ref ref="file" />
+        <appender-ref ref="console" />
+    </logger>
 
 
 </configuration>

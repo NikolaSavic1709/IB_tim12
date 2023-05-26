@@ -4,7 +4,6 @@ import com.ib.DTO.CertificateDTO;
 import com.ib.DTO.ObjectListResponseDTO;
 import com.ib.exception.CertificateAlreadyRevokedException;
 import com.ib.exception.ForbiddenException;
-import com.ib.exception.InvalidUserException;
 import com.ib.model.certificate.CertificateStatus;
 import com.ib.service.certificate.interfaces.ICertificateService;
 import com.ib.service.certificate.interfaces.ICertificateValidationService;
@@ -27,9 +26,9 @@ import java.io.*;
 import java.security.cert.CertificateException;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.zip.ZipOutputStream;
 
-import static com.ib.controller.AuthenticationController.getLastLogId;
+import static com.ib.utils.LogIdGenerator.setLogId;
+
 
 @RestController
 @RequestMapping(value = "api/certificate")
@@ -49,20 +48,19 @@ public class CertificateController {
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAll() {
-        String logId = String.valueOf(getLastLogId()+1);
-        MDC.put("logId", logId);
+        setLogId();
         logger.info("Request received successfully /api/certificate");
 
-        logId = String.valueOf(getLastLogId()+1);
-        MDC.put("logId", logId);
         try {
             List<CertificateDTO> certificateDTOs = certificateService.getAll().parallelStream()
                     .filter(certificate -> certificate.getStatus().equals(CertificateStatus.VALID))
                     .map(CertificateDTO::new).collect(Collectors.toList());
             ObjectListResponseDTO<CertificateDTO> objectListResponse = new ObjectListResponseDTO<>(certificateDTOs.size(), certificateDTOs);
+            setLogId();
             logger.info("Successfully request /api/certificate: Returned status OK, response: "+objectListResponse);
             return new ResponseEntity<>(objectListResponse, HttpStatus.OK);
         }catch (Exception e){
+            setLogId();
             logger.error("UNEXPECTED error: getAll");
             throw e;
         }finally {
@@ -73,22 +71,22 @@ public class CertificateController {
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @GetMapping(value = "/validity/{serialNumber}")
     public ResponseEntity<?> validateCertificate(@PathVariable String serialNumber) {
-        String logId = String.valueOf(getLastLogId()+1);
-        MDC.put("logId", logId);
+        setLogId();
         logger.info("Request received successfully /api/certificate/validity/"+serialNumber);
 
-        logId = String.valueOf(getLastLogId()+1);
-        MDC.put("logId", logId);
         try {
             boolean isValid = certificateValidationService.getAndCheck(serialNumber);
+            setLogId();
             logger.info("Successfully request /api/certificate/validity/"+serialNumber+" : Returned status OK, response: "+isValid);
             return new ResponseEntity<>(isValid, HttpStatus.OK);
         }
         catch (EntityNotFoundException e)
         {
+            setLogId();
             logger.error("Returned status NOT_FOUND: "+e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e){
+            setLogId();
             logger.error("UNEXPECTED error: serialNumber: "+serialNumber);
             throw e;
         } finally {
@@ -99,25 +97,26 @@ public class CertificateController {
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @PostMapping(value = "/validity/file")
     public ResponseEntity<?> validateCertificateByCopy(@RequestParam("file") MultipartFile file) {
-        String logId = String.valueOf(getLastLogId()+1);
-        MDC.put("logId", logId);
+        setLogId();
         logger.info("Request received successfully /api/certificate/validity/file: fileBytes: "+file);
 
-        logId = String.valueOf(getLastLogId()+1);
-        MDC.put("logId", logId);
         try {
             if (certificateValidationService.checkByCopy(file)) {
+                setLogId();
                 logger.info("Successfully request /api/certificate/validity/file: Returned status OK, response: true");
                 return new ResponseEntity<>(HttpStatus.OK);
             }
             else {
+                setLogId();
                 logger.info("Successfully request /api/certificate/validity/file: Returned status OK, response: false");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Not valid");
             }
         } catch (CertificateException | IOException | EntityNotFoundException e){
+            setLogId();
             logger.error("Returned status NOT_FOUND: "+e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Not valid");
         }catch (Exception e){
+            setLogId();
             logger.error("UNEXPECTED error: fileBytes: "+file);
             throw e;
         } finally {
@@ -128,22 +127,22 @@ public class CertificateController {
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @GetMapping(value = "/{serialNumber}")
     public ResponseEntity<?> getById(@PathVariable String serialNumber) {
-        String logId = String.valueOf(getLastLogId()+1);
-        MDC.put("logId", logId);
+        setLogId();
         logger.info("Request received successfully /api/certificate/"+serialNumber);
 
-        logId = String.valueOf(getLastLogId()+1);
-        MDC.put("logId", logId);
         try {
             CertificateDTO certificateDTO=new CertificateDTO(certificateService.getBySerialNumber(serialNumber));
+            setLogId();
             logger.info("Successfully request /api/certificate/"+serialNumber+": Returned status OK, response: "+certificateDTO);
             return new ResponseEntity<>(certificateDTO, HttpStatus.OK);
         }
         catch (EntityNotFoundException e)
         {
+            setLogId();
             logger.error("Returned status NOT_FOUND: "+e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }catch (Exception e){
+            setLogId();
             logger.error("UNEXPECTED error: serialNumber:"+ serialNumber);
             throw e;
         }finally {
@@ -154,12 +153,9 @@ public class CertificateController {
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @GetMapping(value = "/file/{serialNumber}")
     public ResponseEntity<?> getFilesBySerialNumber(@PathVariable String serialNumber, @RequestHeader("Authorization") String token) {
-        String logId = String.valueOf(getLastLogId()+1);
-        MDC.put("logId", logId);
+        setLogId();
         logger.info("Request received successfully /api/certificate/file/"+serialNumber);
 
-        logId = String.valueOf(getLastLogId()+1);
-        MDC.put("logId", logId);
         try {
             byte[] zipBytes = certificateService.getCertificatesInZip(serialNumber, token);
             InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(zipBytes));
@@ -168,6 +164,7 @@ public class CertificateController {
             headers.add("Content-Disposition", String.format("attachment; filename=\"%s.zip\"", serialNumber));
             headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
             headers.add("Expires", "0");
+            setLogId();
             logger.info("Successfully request /api/certificate/file"+serialNumber+": Returned status OK, response file: "+new BCryptPasswordEncoder().encode(resource.toString()));
 
             return ResponseEntity.ok()
@@ -176,6 +173,7 @@ public class CertificateController {
                     .contentType(MediaType.parseMediaType("application/zip"))
                     .body(resource);
         }catch (Exception e){
+            setLogId();
             logger.error("UNEXPECTED error: serialNumber:"+ serialNumber);
             throw e;
         }finally {
@@ -188,26 +186,28 @@ public class CertificateController {
     @PostMapping(value = "/revoke/{serialNumber}")
     public ResponseEntity<?> revokeCertificate(@PathVariable String serialNumber, @RequestBody String revocationReason, @RequestHeader("Authorization") String token)
     {
-        String logId = String.valueOf(getLastLogId()+1);
-        MDC.put("logId", logId);
+        setLogId();
         logger.info("Request received successfully /api/certificate/revoke/"+serialNumber+": revocationReason: "+revocationReason);
 
-        logId = String.valueOf(getLastLogId()+1);
-        MDC.put("logId", logId);
         try {
             certificateValidationService.revokeCertificate(serialNumber,revocationReason, token);
+            setLogId();
             logger.info("Successfully request /api/certificate/revoke/"+serialNumber+": Returned status OK");
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (ForbiddenException e) {
+            setLogId();
             logger.error("Returned status FORBIDDEN: "+e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (EntityNotFoundException e){
+            setLogId();
             logger.error("Returned status NOT_FOUND: "+e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (CertificateAlreadyRevokedException e) {
+            setLogId();
             logger.error("Returned status BAD_REQUEST: "+e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }catch (Exception e){
+            setLogId();
             logger.error("UNEXPECTED error: serialNumber:"+ serialNumber+", revocationReason: "+revocationReason);
             throw e;
         }finally {
