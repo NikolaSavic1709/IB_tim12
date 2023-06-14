@@ -53,6 +53,8 @@ public class TokenUtils {
         claims.put("sub", user.getEmail());
         claims.put("id", user.getId());
         claims.put("role", user.getAuthority().getName());
+        if (user.isOauth()) claims.put("auth_type","oauth");
+        else claims.put("auth_type","standard");
         return this.generateToken(claims);
     }
 

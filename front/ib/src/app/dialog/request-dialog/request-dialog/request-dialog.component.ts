@@ -1,10 +1,11 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, SecurityContext } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { AuthService } from 'src/app/service/auth-service/auth.service';
 import { CertificateRequestService } from 'src/app/service/certificate-request.service';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { CreateCertificate } from 'src/app/model/CreateCertificate';
-
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { ReCaptchaV3Service } from 'ng-recaptcha';
 
 @Component({
   selector: 'app-request-dialog',
@@ -13,22 +14,26 @@ import { CreateCertificate } from 'src/app/model/CreateCertificate';
 })
 export class RequestDialogComponent {
   admin = false;
-  
+
   certificateForm = new FormGroup({
     algorithm: new FormControl('', [Validators.required, Validators.minLength(2)]),
     issuer: new FormControl('', [Validators.required, Validators.minLength(5)]),
     certificateType: new FormControl('', [Validators.required, Validators.minLength(1)])
   });
 
-  constructor(public dialogRef: MatDialogRef<RequestDialogComponent>, public requestService: CertificateRequestService, public authService: AuthService) {}
+  constructor(private sanitizer: DomSanitizer,
+    public dialogRef: MatDialogRef<RequestDialogComponent>,
+    public requestService: CertificateRequestService,
+    private reCaptchaV3Service: ReCaptchaV3Service,
+    public authService: AuthService) { }
 
   closeDialog() {
     this.dialogRef.close();
   }
 
-  ngOnInit() : void {
+  ngOnInit(): void {
     if (this.authService.getRole() == "ADMIN") {
-    this.admin = true;
+      this.admin = true;
     }
 
     this.certificateForm.get('certificateType')?.valueChanges.subscribe(certificateType => {
@@ -45,22 +50,49 @@ export class RequestDialogComponent {
     return this.certificateForm.valid;
   }
 
+  sanitizeInput(input: string): string {
+    const safeHtml: SafeHtml = this.sanitizer.sanitize(SecurityContext.HTML, input) ?? '';
+    return safeHtml.toString();
+  }
+
   sendRequest() {
+
+    const email = this.authService.getEmail();
+    if (!email || !this.validateEmail(email)) {
+      // Handle invalid email address
+      return;
+    }
+
     let request: CreateCertificate = {
-      signatureAlgorithm: this.certificateForm.value.algorithm as string,
-      issuer: this.certificateForm.value.issuer as string,
-      type: this.certificateForm.value.certificateType as string,
-      email: this.authService.getEmail()
+      signatureAlgorithm: this.sanitizeInput(this.certificateForm.value.algorithm as string),
+      issuer: this.sanitizeInput(this.certificateForm.value.issuer as string),
+      type: this.sanitizeInput(this.certificateForm.value.certificateType as string),
+      email: email
     }
 
+    this.reCaptchaV3Service.execute('homepage')
+      .subscribe((token) => {
+        //console.log(token);
+        //this.handleToken(token));
+        if (request.issuer == "") {
+          request.issuer = null;
+        }
+        this.requestService.sendRequest(request,token).subscribe({
+          next: (res) => {
+            this.dialogRef.close();
+          }
+        })
+      });
+    
+  }
 
-    this.requestService.sendRequest(request).subscribe({
-      next: (res) => {
-        this.dialogRef.close();
-      }
-    })}
 
-    cancel() {
-      this.dialogRef.close();
-    }
+  cancel() {
+    this.dialogRef.close();
+  }
+
+  validateEmail(email: string): boolean {
+    const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return pattern.test(email);
+  }
 }

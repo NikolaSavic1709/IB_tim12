@@ -33,6 +33,23 @@ import { EmailForForgotPasswordComponent } from './components/email-for-forgot-p
 import { TwoFactorAuthComponent } from './components/two-factor-auth/two-factor-auth.component';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { RevokeDialogComponent } from './dialog/revoke-dialog/revoke-dialog/revoke-dialog.component';
+import { RenewPasswordComponent } from './components/renew-password/renew-password.component';
+import { RecaptchaModule,
+  RECAPTCHA_SETTINGS,
+  RecaptchaSettings,
+  RecaptchaFormsModule,
+  RECAPTCHA_V3_SITE_KEY,
+  RecaptchaV3Module } from "ng-recaptcha";
+import { environment } from 'src/environments/environment';
+import { RejectDialogComponent } from './dialog/reject-dialog/reject-dialog.component';
+import { GoogleInitOptions, GoogleLoginProvider, SocialAuthServiceConfig } from '@abacritt/angularx-social-login';
+import {GoogleSigninButtonModule} from "@abacritt/angularx-social-login";
+import { ProfileComponent } from './components/profile/profile.component';
+import { FormsModule } from '@angular/forms';
+const googleLoginOptions: GoogleInitOptions = {
+  oneTapEnabled: false, // default is true
+  scopes: 'email profile https://www.googleapis.com/auth/user.phonenumbers.read'
+};
 
 @NgModule({
   declarations: [
@@ -49,7 +66,10 @@ import { RevokeDialogComponent } from './dialog/revoke-dialog/revoke-dialog/revo
     VerifyAccountComponent,
     EmailForForgotPasswordComponent,
     TwoFactorAuthComponent,
-    RevokeDialogComponent
+    RevokeDialogComponent,
+    RenewPasswordComponent,
+    RejectDialogComponent,
+    ProfileComponent
   ],
   imports: [
     BrowserModule,
@@ -69,14 +89,40 @@ import { RevokeDialogComponent } from './dialog/revoke-dialog/revoke-dialog/revo
     MatOptionModule,
     MatSelectModule,
     ReactiveFormsModule,
-    MatRadioModule
+    MatRadioModule,
+    RecaptchaModule,
+    RecaptchaFormsModule,
+    RecaptchaV3Module,
+    GoogleSigninButtonModule,
+    FormsModule
   ],
   providers: [
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
       multi: true,
+    },
+    { provide: RECAPTCHA_V3_SITE_KEY, useValue: environment.reCaptchaV3SiteKey },
+    {
+      provide: 'SocialAuthServiceConfig',
+      useValue: {
+        autoLogin: false,
+        providers: [
+          {
+            id: GoogleLoginProvider.PROVIDER_ID,
+            provider: new GoogleLoginProvider(
+              '62679338211-4omk3gb5srm5i4lfpa3vscg73qah9evv.apps.googleusercontent.com',googleLoginOptions
+            ),
+          },
+        ],
+      } as SocialAuthServiceConfig,
     }
+    // {
+    //   provide: RECAPTCHA_SETTINGS,
+    //   useValue: {
+    //     siteKey: environment.reCaptchaV2SiteKey
+    //   } as RecaptchaSettings
+    // }
   ],
   bootstrap: [AppComponent]
 })

@@ -13,13 +13,20 @@ import { AccountActivatedComponent } from './components/account-activated/accoun
 import { PasswordChangedComponent } from './components/password-changed/password-changed.component';
 import { EmailForForgotPasswordComponent } from './components/email-for-forgot-password/email-for-forgot-password.component';
 import { TwoFactorAuthComponent } from './components/two-factor-auth/two-factor-auth.component';
+import { RenewPasswordGuard } from './guard/renew-password.guard';
+import { RenewPasswordComponent } from './components/renew-password/renew-password.component';
+import { NotRenewPasswordGuard } from './guard/not-renew-password.guard';
+import { ProfileComponent } from './components/profile/profile.component';
 
 const routes: Routes = [
   { path: 'certificates', component: MainPageComponent,
-  // canActivate: [NotLoggedInGuard]
- },
+    canActivate: [NotLoggedInGuard]
+  },
+  { path: 'profile', component: ProfileComponent,
+    canActivate: [NotLoggedInGuard]
+  },
   { path: 'requests', component: RequestPageComponent,
-  canActivate: [NotLoggedInGuard] },
+  canActivate: [NotLoggedInGuard] },  //renew
   { path: 'login', component: LoginComponent,
   canActivate: [LoginGuard] },
   { path: 'register', component: RegisterComponent,
@@ -58,6 +65,11 @@ const routes: Routes = [
     path: 'two-factor-auth',
     canActivate: [LoginGuard],
     component: TwoFactorAuthComponent
+  },
+  {
+    path: 'renew-password',
+    canActivate: [LoginGuard, NotRenewPasswordGuard],
+    component: RenewPasswordComponent
   }
 ];
 

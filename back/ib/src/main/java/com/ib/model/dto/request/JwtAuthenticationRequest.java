@@ -17,11 +17,13 @@ public class JwtAuthenticationRequest {
     @NotNull
     @NotEmpty
     @NotBlank
+    @Email(regexp = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
     private String email;
 
     @NotNull
     @NotEmpty
     @NotBlank
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[A-Z])(?=.*[@#$%^&+=_!]).{8,}$")
     private String password;
 
     @NotNull

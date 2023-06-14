@@ -70,10 +70,10 @@ public class ValidationErrorHandler {
         MDC.remove("logId");
         return new ResponseEntity<>("Invalid request", headers, HttpStatus.BAD_REQUEST);
     }
-//    @ExceptionHandler(Exception.class)
-//    @ResponseStatus(HttpStatus.FORBIDDEN)
-//    protected ResponseEntity<String> f(Exception exception) {
-//        System.out.println(exception.getMessage());
-//        return new ResponseEntity<>("Access denied!", HttpStatus.FORBIDDEN);
-//    }
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    protected ResponseEntity<String> f(Exception exception) {
+        System.out.println(exception.getMessage());
+        return new ResponseEntity<>("Access denied!", HttpStatus.FORBIDDEN);
+    }
 }

@@ -1,6 +1,9 @@
 package com.ib.model.users;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,6 +19,9 @@ public class Authority implements GrantedAuthority {
     private Integer id;
 
     @Column(name = "name", nullable = false, unique = true)
+    @NotNull
+    @NotEmpty
+    @NotBlank
     private String name;
 
     public Authority() {

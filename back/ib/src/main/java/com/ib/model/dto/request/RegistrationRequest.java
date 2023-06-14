@@ -1,6 +1,5 @@
 package com.ib.model.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ib.model.users.EndUser;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -36,7 +35,7 @@ public class RegistrationRequest {
     @NotNull
     @NotEmpty
     @NotBlank
-    @Pattern(regexp = "^(?=.*\\d)(?=.*[A-Z])(?!.*[^a-zA-Z0-9@#$^+=])(.{8,15})$")
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[A-Z])(?=.*[@#$%^&+=_!]).{8,}$")
     private String password;
     @NotNull
     @NotEmpty

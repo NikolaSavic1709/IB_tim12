@@ -1,6 +1,10 @@
 package com.ib.model.users;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +19,6 @@ import java.util.Collection;
 import java.util.List;
 
 import static jakarta.persistence.InheritanceType.JOINED;
-import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,18 +34,32 @@ public class User implements UserDetails {
     private Integer id;
 
     @Column(name = "email", nullable = false)
+    @NotNull
+    @NotEmpty
+    @NotBlank
+    @Email(regexp = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
     private String email;
 
     @Column(name = "name", nullable = false)
+    @NotNull
+    @NotEmpty
+    @NotBlank
     private String name;
 
     @Column(name = "surname", nullable = false)
+    @NotNull
+    @NotEmpty
+    @NotBlank
     private String surname;
 
-    @Column(name = "telephone_number", nullable = false)
+    @Column(name = "telephone_number", nullable = true)
     private String telephoneNumber;
 
     @Column(name = "password", nullable = false)
+    @NotNull
+    @NotEmpty
+    @NotBlank
+    //@Pattern(regexp = "^(?=.*\\d)(?=.*[A-Z])(?!.*[^a-zA-Z0-9@#$^+=])(.{8,15})$")
     private String password;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -52,11 +69,25 @@ public class User implements UserDetails {
     @Column(name="is_enabled")
     private boolean isEnabled;
 
+    @Column(name="is_oauth")
+    private boolean isOauth;
+
     @Column(name = "mfa_token")
     private Integer MFAToken;
 
+    @Column(name = "mfa_token_remain_attempts")
+    private Integer MFATokenRemainAttempts;
+
     @Column(name = "mfa_expiry_date")
     private LocalDateTime MFATokenExpiryDate;
+
+    @Column(name = "last_password_reset_date")
+    private LocalDateTime lastPasswordResetDate;
+
+    @Column(name= "previous_passwords")
+    @ElementCollection
+    @CollectionTable(name = "password", joinColumns = @JoinColumn(name = "user_id"))
+    private List<String> passwordHistory;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -101,6 +132,12 @@ public class User implements UserDetails {
         this.password = password;
         this.authority = authority;
         this.isEnabled = isEnabled;
+        this.passwordHistory = new ArrayList<String>();
+        this.isOauth = false;
+    }
+
+    public void addPassword(String password) {
+        this.passwordHistory.add(password);
     }
 
     @Override

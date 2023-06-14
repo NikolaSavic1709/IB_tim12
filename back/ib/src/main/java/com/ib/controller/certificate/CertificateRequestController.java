@@ -15,10 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -77,11 +80,14 @@ public class CertificateRequestController {
 
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
     @PostMapping(value = "/create",consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createRequest(@Valid @RequestBody RequestCreationDTO requestCreationDTO, @RequestHeader("Authorization") String token)
+    public ResponseEntity<?> createRequest(@Valid @RequestBody RequestCreationDTO requestCreationDTO, @RequestHeader("Authorization") String token, @RequestHeader HttpHeaders headers)
     {
         setLogId();
         logger.info("Request received successfully /api/request/create: "+requestCreationDTO);
 
+        if (!headers.containsKey("recaptcha")){
+            throw new BadCredentialsException("Invalid reCaptcha token");
+        }
         try {
             CertificateRequest request = requestService.createRequest(requestCreationDTO, token);
             CertificateForRequestDTO requestDTO = new CertificateForRequestDTO(request);
@@ -111,13 +117,13 @@ public class CertificateRequestController {
 
 
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
-    @PutMapping(value = "/accept")
-    public ResponseEntity<?> acceptRequest(@RequestBody CertificateRequest certificateRequest,  @RequestHeader("Authorization") String token) {
+    @PutMapping(value = "/accept/{serialNumber}")
+    public ResponseEntity<?> acceptRequest(@PathVariable String serialNumber,  @RequestHeader("Authorization") String token) {
         setLogId();
-        logger.info("Request received successfully /api/request/accept: "+certificateRequest);
+        logger.info("Request received successfully /api/request/accept: "+serialNumber);
 
         try {
-            Certificate created = requestService.acceptRequest(certificateRequest, token);
+            Certificate created = requestService.acceptRequest(serialNumber, token);
             setLogId();
             logger.info("Successfully request /api/request/accept: Returned status OK, response: "+created);
             return new ResponseEntity<>(created, HttpStatus.OK);
@@ -127,7 +133,7 @@ public class CertificateRequestController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }catch (Exception e){
             setLogId();
-            logger.error("UNEXPECTED error: "+ certificateRequest);
+            logger.error("UNEXPECTED error: "+ serialNumber);
             throw e;
         }finally {
             MDC.remove("logId");
@@ -136,23 +142,24 @@ public class CertificateRequestController {
     }
 
     @PreAuthorize("hasAuthority('END_USER') or hasAuthority('ADMIN')")
-    @PutMapping(value = "/reject/{id}") // id of certificate request
-    public ResponseEntity<?> rejectRequest(@RequestBody String rejectionReason, @PathVariable Integer id, @RequestHeader("Authorization") String token) {
+    @PutMapping(value = "/reject/{serialNumber}") // id of certificate request
+    public ResponseEntity<?> rejectRequest(@RequestBody String rejectionReason, @PathVariable String serialNumber, @RequestHeader("Authorization") String token) throws ForbiddenException {
         setLogId();
-        logger.info("Request received successfully /api/request/reject/"+id+": rejectionReason: "+rejectionReason);
+        logger.info("Request received successfully /api/request/reject/"+serialNumber+": rejectionReason: "+rejectionReason);
 
         try{
-            requestService.rejectRequest(id, rejectionReason, token);
+            requestService.rejectRequest(serialNumber, rejectionReason, token);
             setLogId();
-            logger.info("Successfully request /api/request/reject/"+id+": Returned status OK");
+            logger.info("Successfully request /api/request/reject/"+serialNumber+": Returned status OK");
             return new ResponseEntity<>(HttpStatus.OK);
         }
         catch (Exception e){
             setLogId();
-            logger.error("UNEXPECTED error: requestId: "+ id+", rejectionReason: "+ rejectionReason);
+            logger.error("UNEXPECTED error: requestId: "+ serialNumber+", rejectionReason: "+ rejectionReason);
             throw e;
         }finally {
             MDC.remove("logId");
+
         }
     }
 

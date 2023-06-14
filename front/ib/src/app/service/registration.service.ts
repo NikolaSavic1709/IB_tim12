@@ -13,17 +13,22 @@ export class RegistrationService {
   public activationType:string|null|undefined='';
   public activationResource:string|null|undefined='';
   public token:number|null|undefined=0;
+  public recaptchaToken:string|null|undefined='';
 
   private hasError=new BehaviorSubject<boolean>(false);
   hasErrorObs=this.hasError.asObservable();
+
+  private error=new BehaviorSubject<string>('');
+  errorObs=this.error.asObservable();
+
   private headers = new HttpHeaders({
     skip: 'true',
   });
 
   constructor(private http: HttpClient, private router:Router) {
   }
-  registerUserObs(registration:Registration):any{
-    this.registerUser(registration).subscribe({
+  registerUserObs(registration:Registration, token:string):any{
+    this.registerUser(registration,token).subscribe({
       next: (result) => {
         if (registration.userActivationType=="email"){
           this.activationResource = registration.email;
@@ -37,11 +42,15 @@ export class RegistrationService {
       error: (error) => {
         if (error instanceof HttpErrorResponse) {
           this.hasError.next(true);
+          this.error.next('Email already exists');
         }
       },
     });
   }
-  registerUser(registration: Registration): Observable<Registration> {
+  registerUser(registration: Registration, token:string): Observable<Registration> {
+    const recaptchaHeaders = new HttpHeaders({
+      skip: 'true', recaptcha:token
+    });
     return this.http.post<any>(environment.apiHost + "register",
       {
         name: registration.name,
@@ -50,15 +59,19 @@ export class RegistrationService {
         email: registration.email,
         password: registration.password,
         userActivationType: registration.userActivationType
-      }, {"headers": this.headers})
+      }, {"headers": recaptchaHeaders})
   }
 
-  activateUser(token:number,resource:string,type:string): Observable<any> {
+  activateUser(token:number,resource:string,type:string, recaptchaToken:string): Observable<any> {
+    const recaptchaHeaders = new HttpHeaders({
+      skip: 'true', recaptcha:recaptchaToken
+    });
+
     return this.http.post(environment.apiHost + "activate",{
       activationType:type,
       activationResource:resource,
       activationCode:token
-    }, {"headers": this.headers, responseType: 'text'})
+    }, {"headers": recaptchaHeaders, responseType: 'text'})
   }
 
   

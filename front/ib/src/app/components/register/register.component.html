@@ -85,7 +85,7 @@
                 <button type="submit" id="loginbtn" [disabled]="!signupForm.valid" >SIGN UP</button>
               
                 <mat-error *ngIf="hasError" >
-                  <span class="signup-error" >Email already exists</span>
+                  <span class="signup-error" >{{error}}</span>
                 </mat-error>
               
               

@@ -1,5 +1,9 @@
 package com.ib.controller;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.ib.DTO.*;
 import com.ib.exception.*;
 import com.ib.model.dto.JWTToken;
@@ -8,6 +12,8 @@ import com.ib.model.dto.request.RegistrationRequest;
 import com.ib.model.users.EndUser;
 import com.ib.model.users.User;
 import com.ib.service.EndUserService;
+import com.ib.service.OAuthService;
+import com.ib.service.users.impl.UserService;
 import com.ib.service.users.interfaces.IUserActivationService;
 import com.ib.utils.TokenUtils;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,10 +22,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -27,6 +36,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import static com.ib.utils.LogIdGenerator.setLogId;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.time.LocalDateTime;
+import java.util.Collections;
 
 
 //Kontroler zaduzen za autentifikaciju korisnika
@@ -45,16 +58,22 @@ public class AuthenticationController {
     private EndUserService endUserService;
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
+    private OAuthService oauthService;
+
+    @Autowired
     private IUserActivationService userActivationService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> createAuthenticationToken(@RequestBody @Valid JwtAuthenticationRequest authenticationRequest) throws Exception {
+    public ResponseEntity<?> createAuthenticationToken(@RequestBody @Valid JwtAuthenticationRequest authenticationRequest, @RequestHeader HttpHeaders headers) throws Exception {
+
         setLogId();
         logger.info("Request received successfully /api/login: "+authenticationRequest);
-
-
-
-
+        if (!headers.containsKey("recaptcha")){
+            throw new BadCredentialsException("Invalid reCaptcha token");
+        }
         if(!endUserService.checkUserEnabled(authenticationRequest.getEmail())){
             setLogId();
             logger.error("Returned status NOT_FOUND: User doesn't exist or isn't enabled");
@@ -79,6 +98,11 @@ public class AuthenticationController {
             throw e;
         }
 
+
+        User user = userService.findByEmail(authenticationRequest.getEmail());
+        if (user.getLastPasswordResetDate().isBefore(LocalDateTime.now().minusMinutes(60))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Password expired");
+        }
 
         try {
             endUserService.sendMFAToken(authenticationRequest.getEmail(), authenticationRequest.getMfaType());
@@ -105,10 +129,15 @@ public class AuthenticationController {
     }
 
     @PostMapping("/loginMFA")
-    public ResponseEntity<?> loginMFA(@RequestBody @Valid MFAAuthenticationRequest authenticationRequest) throws Exception {
+    public ResponseEntity<?> loginMFA(@RequestBody @Valid MFAAuthenticationRequest authenticationRequest, @RequestHeader HttpHeaders headers) throws Exception {
+
         setLogId();
         logger.info("Request received successfully /api/loginMFA: "+authenticationRequest);
 
+
+        if (!headers.containsKey("recaptcha")){
+            throw new BadCredentialsException("Invalid reCaptcha token");
+        }
 
         if(!endUserService.checkUserEnabled(authenticationRequest.getEmail())){
             setLogId();
@@ -116,6 +145,7 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid login");
         }
 
+        endUserService.setStandardAuth(authenticationRequest.getEmail());
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 authenticationRequest.getEmail(), authenticationRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -128,6 +158,7 @@ public class AuthenticationController {
             setLogId();
             logger.info("Successfully request /api/loginMFA: Returned status OK");
             return ResponseEntity.ok(new JWTToken(jwt, expiresIn));
+
         }catch (InvalidUserException e) {
             setLogId();
             logger.error("Returned status NOT_FOUND: "+e.getMessage());
@@ -136,6 +167,8 @@ public class AuthenticationController {
             setLogId();
             logger.error("Returned status BAD_REQUEST: "+e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (SpamAuthException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e){
             setLogId();
             logger.error("UNEXPECTED error: "+ authenticationRequest);
@@ -147,6 +180,24 @@ public class AuthenticationController {
 
 
     }
+
+    @PostMapping("/google/login")
+    public ResponseEntity<?> googleLogin(@RequestBody @Valid GoogleTokenDTO tokenDto){
+        try{
+            User user = oauthService.loadUserFromGoogle(tokenDto);
+
+            String jwt = tokenUtils.generateToken(user);
+            int expiresIn = tokenUtils.getExpiredIn();
+            return ResponseEntity.ok(new JWTToken(jwt, expiresIn));
+
+        }catch (OAuthException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (OAuthUserUnregistered e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+
+    }
+
 
     @GetMapping(value = "/logout", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> logoutUser () {
@@ -161,10 +212,13 @@ public class AuthenticationController {
     }
 
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> register( @RequestBody RegistrationRequest registrationRequest) {
+        public ResponseEntity<?> register( @RequestBody RegistrationRequest registrationRequest, @RequestHeader HttpHeaders headers) {
         setLogId();
         logger.info("Request received successfully /api/register: "+registrationRequest);
 
+        if (!headers.containsKey("recaptcha")){
+            throw new BadCredentialsException("Invalid reCaptcha token");
+        }
 
         String activationType = registrationRequest.getUserActivationType();
         if (!activationType.equals("email") && !activationType.equals("sms")) {
@@ -203,9 +257,13 @@ public class AuthenticationController {
     }
 
     @PostMapping(value = "/activate")
-    public ResponseEntity<?> activateUser(@RequestBody @Valid AccountActivationDTO accountActivationDTO) {
+            public ResponseEntity<?> activateUser(@RequestBody @Valid AccountActivationDTO accountActivationDTO, @RequestHeader HttpHeaders headers) {
         setLogId();
-        logger.info("Request received successfully /api/activate: "+accountActivationDTO);
+        logger.info("Request received successfully /api/activate: " + accountActivationDTO);
+
+        if (!headers.containsKey("recaptcha")) {
+            throw new BadCredentialsException("Invalid reCaptcha token");
+        }
 
         String activationType = accountActivationDTO.getActivationType();
         if (!activationType.equals("email") && !activationType.equals("sms")) {
@@ -226,93 +284,143 @@ public class AuthenticationController {
             setLogId();
             logger.error("Returned status BAD_REQUEST: Activation expired. Register again!");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Activation expired. Register again!");
-        } catch (Exception e){
+        } catch (SpamAuthException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (Exception e) {
             setLogId();
-            logger.error("UNEXPECTED error: "+ accountActivationDTO);
+            logger.error("UNEXPECTED error: " + accountActivationDTO);
             throw e;
-        }
-        finally {
+        } finally {
             MDC.remove("logId");
+
         }
     }
 
     @PostMapping(value="/forgotPassword")
-    public ResponseEntity<?> sendResetCodeToEmail(@RequestBody @Valid ForgotPasswordDTO forgotPasswordDTO)
-    {
-        setLogId();
-        logger.info("Request received successfully /api/forgotPassword: "+forgotPasswordDTO);
+    public ResponseEntity<?> sendResetCodeToEmail(@RequestBody @Valid ForgotPasswordDTO forgotPasswordDTO, @RequestHeader HttpHeaders headers) {
+            setLogId();
+            logger.info("Request received successfully /api/forgotPassword: " + forgotPasswordDTO);
+            if (!headers.containsKey("recaptcha")) {
+                throw new BadCredentialsException("Invalid reCaptcha token");
+            }
 
+            String activationType = forgotPasswordDTO.getActivationType();
+            if (!activationType.equals("email") && !activationType.equals("sms")) {
+                setLogId();
+                logger.error("Returned status BAD_REQUEST: Forgot password functionality is only possible via email or SMS");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Forgot password functionality is only possible via email or SMS");
+            }
+            try {
+                endUserService.forgotPassword(forgotPasswordDTO);
+                setLogId();
+                logger.info("Successfully request /api/forgotPassword: Returned status NO_CONTENT");
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Email/SMS with reset code has been sent!");
+            } catch (EntityNotFoundException e) {
+                setLogId();
+                logger.error("Returned status NOT_FOUND: User does not exist");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User does not exist!");
+            } catch (MailSendingException e) {
+                setLogId();
+                logger.error("Returned status BAD_REQUEST: Error while sending mail, possible inactive email address");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while sending mail, possible inactive email address");
+            } catch (SMSSendingException e) {
+                setLogId();
+                logger.error("Returned status BAD_REQUEST: Error while sending sms, possible inactive phone number");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while sending sms, possible inactive phone number");
+            } catch (Exception e) {
+                setLogId();
+                logger.error("UNEXPECTED error: " + forgotPasswordDTO);
+                throw e;
+            } finally {
+                MDC.remove("logId");
+            }
 
-        String activationType = forgotPasswordDTO.getActivationType();
-        if (!activationType.equals("email") && !activationType.equals("sms")) {
-            setLogId();
-            logger.error("Returned status BAD_REQUEST: Forgot password functionality is only possible via email or SMS");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Forgot password functionality is only possible via email or SMS");
-        }
-        try {
-            endUserService.forgotPassword(forgotPasswordDTO);
-            setLogId();
-            logger.info("Successfully request /api/forgotPassword: Returned status NO_CONTENT");
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Email/SMS with reset code has been sent!");
-        } catch (EntityNotFoundException e) {
-            setLogId();
-            logger.error("Returned status NOT_FOUND: User does not exist");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User does not exist!");
-        } catch (MailSendingException e) {
-            setLogId();
-            logger.error("Returned status BAD_REQUEST: Error while sending mail, possible inactive email address");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while sending mail, possible inactive email address");
-        } catch (SMSSendingException e) {
-            setLogId();
-            logger.error("Returned status BAD_REQUEST: Error while sending sms, possible inactive phone number");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while sending sms, possible inactive phone number");
-        } catch (Exception e){
-            setLogId();
-            logger.error("UNEXPECTED error: "+ forgotPasswordDTO);
-            throw e;
-        }
-        finally {
-            MDC.remove("logId");
         }
 
+        @PostMapping(value = "/resetPassword", consumes = "application/json")
+        public ResponseEntity<?> changePasswordWithResetCode (@Valid @RequestBody ResetPasswordDTO
+        resetPasswordDTO, @RequestHeader HttpHeaders headers)
+        {
+            setLogId();
+            logger.info("Request received successfully /api/resetPassword: " + resetPasswordDTO);
+
+            if (!headers.containsKey("recaptcha")) {
+                throw new BadCredentialsException("Invalid reCaptcha token");
+            }
+
+            String activationType = resetPasswordDTO.getActivationType();
+            if (!activationType.equals("email") && !activationType.equals("sms")) {
+                setLogId();
+                logger.error("Returned status BAD_REQUEST: Forgot password functionality is only possible via email or SMS");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Forgot password functionality is only possible via email or SMS");
+            }
+
+            try {
+                endUserService.resetPassword(resetPasswordDTO);
+                setLogId();
+                logger.info("Successfully request /api/resetPassword: Returned status NO_CONTENT");
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Password successfully changed!");
+            } catch (EntityNotFoundException e) {
+                setLogId();
+                logger.error("Returned status NOT_FOUND: User does not exist");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User does not exist!");
+            }  catch (IncorrectCodeException e) {
+                setLogId();
+                logger.error("Returned status BAD_REQUEST: Wrong reset code");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Wrong reset code!");
+            } catch (CodeExpiredException e) {
+                setLogId();
+                logger.error("Returned status BAD_REQUEST: Code is expired");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Code is expired!");
+            } catch (SpamAuthException e) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+            } catch (Exception e) {
+                setLogId();
+                logger.error("UNEXPECTED error: " + resetPasswordDTO);
+                throw e;
+            } finally {
+                MDC.remove("logId");
+            }
+        }
+
+        @PostMapping(value = "/renewPassword", consumes = "application/json")
+        public ResponseEntity<?> renewPassword (@Valid @RequestBody RenewPasswordDTO
+        renewPasswordDTO, @RequestHeader HttpHeaders headers){
+            if (!headers.containsKey("recaptcha")) {
+                throw new BadCredentialsException("Invalid reCaptcha token");
+            }
+
+            try {
+                endUserService.renewPassword(renewPasswordDTO);
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Password successfully changed!");
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            }
+        }
+
+        @PutMapping(value = "/user/update/{id}")
+        public ResponseEntity<?> updateUser (@PathVariable("id") Integer id, @RequestBody UserUpdateDTO userUpdateDTO, @RequestHeader HttpHeaders headers)
+        {
+//        if (!headers.containsKey("recaptcha")){
+//            throw new BadCredentialsException("Invalid reCaptcha token");
+//        }
+            User user;
+            try {
+                user = userService.update(id, userUpdateDTO);
+            } catch (InvalidUserException e) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            }
+
+            return new ResponseEntity<>(new UserUpdateDTO(user), HttpStatus.OK);
+        }
+
+        @GetMapping(value = "/user/{id}")
+        public ResponseEntity<?> getUser (@PathVariable("id") Integer id){
+
+            User user = userService.get(id);
+            if (user == null)
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid user");
+
+            return new ResponseEntity<>(new UserUpdateDTO(user), HttpStatus.OK);
+        }
     }
-
-    @PostMapping(value="/resetPassword", consumes = "application/json")
-    public ResponseEntity<?> changePasswordWithResetCode(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO)
-    {
-        setLogId();
-        logger.info("Request received successfully /api/resetPassword: "+resetPasswordDTO);
-
-        String activationType = resetPasswordDTO.getActivationType();
-        if (!activationType.equals("email") && !activationType.equals("sms")) {
-            setLogId();
-            logger.error("Returned status BAD_REQUEST: Forgot password functionality is only possible via email or SMS");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Forgot password functionality is only possible via email or SMS");
-        }
-
-        try {
-            endUserService.resetPassword(resetPasswordDTO);
-            setLogId();
-            logger.info("Successfully request /api/resetPassword: Returned status NO_CONTENT");
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Password successfully changed!");
-        } catch (EntityNotFoundException e) {
-            setLogId();
-            logger.error("Returned status NOT_FOUND: User does not exist");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body( "User does not exist!");
-        } catch (IncorrectCodeException | CodeExpiredException e) {
-            setLogId();
-            logger.error("Returned status BAD_REQUEST: Code is expired or not correct");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Code is expired or not correct!");
-        } catch (Exception e){
-            setLogId();
-            logger.error("UNEXPECTED error: "+ resetPasswordDTO);
-            throw e;
-        }
-        finally {
-            MDC.remove("logId");
-        }
-    }
-
-
-
-}

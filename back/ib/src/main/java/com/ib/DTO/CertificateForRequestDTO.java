@@ -5,7 +5,6 @@ import com.ib.model.certificate.CertificateRequest;
 import com.ib.model.certificate.CertificateStatus;
 import com.ib.model.certificate.CertificateType;
 import com.ib.model.certificate.RequestStatus;
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,7 +17,6 @@ import java.util.Date;
 @Getter
 @Setter
 public class CertificateForRequestDTO {
-
     private RequestStatus requestStatus;
     private String rejectionReason;
     private String serialNumber;

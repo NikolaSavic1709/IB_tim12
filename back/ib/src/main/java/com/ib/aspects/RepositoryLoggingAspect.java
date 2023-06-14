@@ -41,7 +41,10 @@ public class RepositoryLoggingAspect {
                 logger.info("AFTER, {} method called: {}, Result is empty", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
             }
         } else {
-            logger.info("AFTER, {} method called: {}, {}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName(), result.toString());
+            if(result==null)
+                logger.info("AFTER, {} method called: {}, {}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName(), "null");
+            else
+                logger.info("AFTER, {} method called: {}, {}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName(), result.toString());
         }
         MDC.remove("logId");
     }
