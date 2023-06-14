@@ -102,4 +102,18 @@ public class User implements UserDetails {
         this.authority = authority;
         this.isEnabled = isEnabled;
     }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", name='" + name + '\'' +
+                ", surname='" + surname + '\'' +
+                ", telephoneNumber='" + telephoneNumber + '\'' +
+                ", authority=" + authority +
+                ", isEnabled=" + isEnabled +
+                ", MFATokenExpiryDate=" + MFATokenExpiryDate +
+                '}';
+    }
 }

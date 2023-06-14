@@ -129,18 +129,18 @@ public class CertificateService extends JPAService<Certificate> implements ICert
 
             certificateFileStorage.exportCertificate(cert);
             certificateFileStorage.exportPrivateKey(keyPairSubject.getPrivate(), sn);
-            addToKeystore("testKeystore.p12","password","testAlias",sn);
+            //addToKeystore("testKeystore.p12","password","testAlias",sn);
             return cert;
         } catch (IllegalArgumentException | IllegalStateException | OperatorCreationException | CertificateException e) {
             e.printStackTrace();
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } catch (KeyStoreException e) {
-            System.out.println("mrs");
-            throw new RuntimeException(e);
-        } catch (NoSuchAlgorithmException e) {
-            System.out.println("mrsssss");
-            throw new RuntimeException(e);
+//        } catch (KeyStoreException e) {
+//            System.out.println("mrs");
+//            throw new RuntimeException(e);
+//        } catch (NoSuchAlgorithmException e) {
+//            System.out.println("mrsssss");
+//            throw new RuntimeException(e);
         }
         return null;
     }
