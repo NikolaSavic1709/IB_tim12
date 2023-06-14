@@ -70,7 +70,7 @@ export class MainPageComponent implements OnInit{
         const file = target.files[0];
         if (file.type == 'application/x-x509-ca-cert') {
           if (file.size > 10*1024){
-            this.snackBar.open('File size exceeds 1KB limit', 'Close', {
+            this.snackBar.open('File size exceeds 10KB limit', 'Close', {
               duration: 3000,
               verticalPosition: 'bottom',
               horizontalPosition: 'center',
