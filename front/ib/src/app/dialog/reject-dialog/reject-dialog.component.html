@@ -1,0 +1,16 @@
+<h1 mat-dialog-title style="font-size: 20sp; line-height: 1.2em" class="serial-number">Why are you revoking certificate<br>{{this.data}}</h1>
+<mat-dialog-content>
+    <form [formGroup]="rejectionForm">
+        <mat-form-field style="width:250px">
+            <mat-label>Reason</mat-label>
+            <input matInput formControlName="rejectionReason" type="text" required>
+            <mat-error *ngIf="rejectionForm.get('rejectionReason')?.invalid && (rejectionForm.get('rejectionReason')?.dirty || rejectionForm.get('rejectionReason')?.touched)">
+                Reason is required.
+            </mat-error>
+        </mat-form-field>
+    </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-button type="submit" [disabled]="!isFormValid()" (click)="rejectRequest()">Submit</button>
+    <button mat-button (click)="closeDialog()">Cancel</button>
+</mat-dialog-actions>

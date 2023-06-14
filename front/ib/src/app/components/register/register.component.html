@@ -1,0 +1,102 @@
+<div id="background">
+    <div id="container">
+
+        <h1>Sign up</h1>
+
+        <div class="content">
+
+
+            <form [formGroup]="signupForm" (ngSubmit)="signup()">
+
+                <div class="field-container">
+                  <mat-form-field class="field field-small" appearance="outline">
+                    <mat-label>Name</mat-label>
+                    <input matInput type="text" placeholder="John" name="name" formControlName="name">
+                    <mat-error *ngIf="signupForm.get('name')?.invalid && signupForm.get('name')?.touched" >
+                      <span *ngIf="signupForm.get('name')?.errors?.['pattern']" class="input-error" >Not valid format</span>
+                      <span *ngIf="signupForm.get('name')?.errors?.['required']" class="input-error" >Field is required</span>
+                    </mat-error>
+                  </mat-form-field>
+                
+                  <mat-form-field class="field field-small" appearance="outline">
+                    <mat-label>Surname</mat-label>
+                    <input matInput type="text" placeholder="Doe" name="surname" formControlName="surname">
+                    <mat-error *ngIf="signupForm.get('surname')?.invalid && signupForm.get('surname')?.touched" >
+                      <span *ngIf="signupForm.get('surname')?.errors?.['pattern']" class="input-error" >Not valid format</span>
+                      <span *ngIf="signupForm.get('surname')?.errors?.['required']" class="input-error" >Field is required</span>
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+              
+                <mat-form-field appearance="outline" class="field">
+                  <mat-label>Email</mat-label>
+                  <input matInput type="email" placeholder="name@example.com" name="email" formControlName="email">
+                  <mat-error *ngIf="signupForm.get('email')?.invalid && signupForm.get('email')?.touched" >
+                    <span *ngIf="signupForm.get('email')?.errors?.['email']" class="input-error" >Email must be in correct format</span>
+                    <span *ngIf="signupForm.get('email')?.errors?.['required']" class="input-error" >Email is required</span>
+                  </mat-error>
+                </mat-form-field>
+              
+                <mat-form-field appearance="outline" class="field">
+                  <mat-label>Phone number</mat-label>
+                  <input matInput type="text" placeholder="0123456789" name="phoneNumber" formControlName="phoneNumber">
+                  <mat-error *ngIf="signupForm.get('phoneNumber')?.invalid && signupForm.get('phoneNumber')?.touched" >
+                    <span *ngIf="signupForm.get('phoneNumber')?.errors?.['minlength'] ||
+                     signupForm.get('phoneNumber')?.errors?.['maxlength'] || signupForm.get('phoneNumber')?.errors?.['pattern']" class="input-error" >Not valid format</span>
+                    <span *ngIf="signupForm.get('phoneNumber')?.errors?.['required']" class="input-error" >Field is required</span>
+                  </mat-error>
+                </mat-form-field>
+              
+                <mat-form-field appearance="outline" class="field">
+                  <mat-label>Password</mat-label>
+                  <input matInput [type]="hidePassword ? 'password' : 'text'" name="password" formControlName="password">
+                  <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" [attr.aria-label]="'Hide password'"
+                    [attr.aria-pressed]="hidePassword">
+                    <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                  </button>
+                  <mat-error *ngIf="signupForm.get('password')?.invalid && signupForm.get('password')?.touched" >
+                    <span *ngIf="signupForm.get('password')?.errors?.['checkpasswords']" class="input-error" >Not valid format</span>
+                    <span *ngIf="signupForm.get('password')?.errors?.['minlength']" class="input-error" >Must contain atleast 6 characters</span>
+                    <span *ngIf="signupForm.get('password')?.errors?.['required']" class="input-error" >Field is required</span>
+                  </mat-error>
+                </mat-form-field>
+              
+                <mat-form-field appearance="outline" class="field">
+                  <mat-label>Confirm password</mat-label>
+                  <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" name="confirmPassword" formControlName="confirmPassword">
+                  <button mat-icon-button matSuffix (click)="hideConfirmPassword = !hideConfirmPassword" [attr.aria-label]="'Hide password'"
+                    [attr.aria-pressed]="hideConfirmPassword">
+                    <mat-icon>{{hideConfirmPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                  </button>
+                  <mat-error *ngIf="signupForm.get('confirmPassword')?.invalid && signupForm.get('confirmPassword')?.touched" >
+                    <span *ngIf="signupForm.get('confirmPassword')?.errors?.['matching']" class="input-error" >Passwords must match</span>
+                    <span *ngIf="signupForm.get('confirmPassword')?.errors?.['required']" class="input-error" >Field is required</span>
+                  </mat-error>
+                </mat-form-field>
+
+                <div id="radio">
+                    <p> Verify Account Using</p>
+                    <mat-radio-group aria-label="Select an option" formControlName="twoFactor" required>
+                        <mat-radio-button value="email">Email</mat-radio-button>
+                        <mat-radio-button value="sms">Phone number</mat-radio-button>
+                    </mat-radio-group>
+                </div>
+              
+                <button type="submit" id="loginbtn" [disabled]="!signupForm.valid" >SIGN UP</button>
+              
+                <mat-error *ngIf="hasError" >
+                  <span class="signup-error" >{{error}}</span>
+                </mat-error>
+              
+              
+                <div id="toLogin">
+                  <p>Already have an account?</p>
+                  <p id="login" (click)="toLogin()">Log in</p>
+                </div>
+              
+              </form>
+
+
+        </div>
+    </div>
+</div>

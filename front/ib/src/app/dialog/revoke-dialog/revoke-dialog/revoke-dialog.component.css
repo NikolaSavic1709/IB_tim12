@@ -1,0 +1,7 @@
+.serial-number {
+    max-width: 100%; /* Change this value to the desired maximum width */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative; /* make the element a positioning context for the tooltip */
+}

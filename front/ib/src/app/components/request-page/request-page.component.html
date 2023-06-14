@@ -1,0 +1,70 @@
+<div class="table-header">
+    <span style="font-size: 20px; font-weight: 500;">Requests</span>
+    <span style="font-size: 16px; height: 20px;">Total selected: {{selection.selected.length}}</span>
+    <button mat-raised-button (click)="openForm()">
+        <mat-icon> add </mat-icon>
+        Create request
+    </button>
+    <button mat-raised-button (click)="acceptRequests()">ACCEPT</button>
+    <button mat-raised-button (click)="rejectRequests()">REJECT</button>
+  
+  </div>
+  <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+  
+      <!-- Checkbox Column -->
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-checkbox (change)="$event ? masterToggle() : null"
+                        [checked]="selection.hasValue() && isAllSelected()"
+                        [indeterminate]="selection.hasValue() && !isAllSelected()">
+          </mat-checkbox>
+        </th>
+        <td mat-cell *matCellDef="let row">
+          <mat-checkbox color="secondary"
+                        (click)="$event.stopPropagation()"
+                        (change)="$event ? selection.toggle(row) : null"
+                        [checked]="selection.isSelected(row)">
+          </mat-checkbox>
+        </td>
+      </ng-container>
+    
+      <ng-container matColumnDef="serial number">
+        <th mat-header-cell *matHeaderCellDef> Serial No. </th>
+        <td mat-cell *matCellDef="let element" class="serial-number" [title]="element.serialNumber"> {{element.serialNumber}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Issuer">
+        <th mat-header-cell *matHeaderCellDef> Issuer </th>
+        <td mat-cell *matCellDef="let element" class="serial-number"> {{element.issuer ? element.issuer : '-'}}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="Valid from">
+        <th mat-header-cell *matHeaderCellDef> Valid from </th>
+        <td mat-cell *matCellDef="let element"> {{element.startDate}} </td>
+      </ng-container>
+    
+      <ng-container matColumnDef="Valid to">
+        <th mat-header-cell *matHeaderCellDef> Valid to </th>
+        <td mat-cell *matCellDef="let element"> {{element.endDate}} </td>
+      </ng-container>
+    
+      <ng-container matColumnDef="Type">
+        <th mat-header-cell *matHeaderCellDef> Type </th>
+        <td mat-cell *matCellDef="let element"> {{element.type}} </td>
+      </ng-container>
+    
+      <ng-container matColumnDef="Subject">
+        <th mat-header-cell *matHeaderCellDef> Subject </th>
+        <td mat-cell *matCellDef="let element"> {{element.email}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Status">
+        <th mat-header-cell *matHeaderCellDef> Status </th>
+        <td mat-cell *matCellDef="let element"> {{element.requestStatus}} </td>
+      </ng-container>
+    
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+          (click)="selection.toggle(row)">
+      </tr>
+    </table>
