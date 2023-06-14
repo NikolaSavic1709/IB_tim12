@@ -5,7 +5,6 @@ import com.ib.model.certificate.CertificateRequest;
 import com.ib.model.certificate.CertificateStatus;
 import com.ib.model.certificate.CertificateType;
 import com.ib.model.certificate.RequestStatus;
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,13 +17,14 @@ import java.util.Date;
 @Getter
 @Setter
 public class CertificateForRequestDTO {
-
     private RequestStatus requestStatus;
     private String rejectionReason;
     private String serialNumber;
     private String signatureAlgorithm;
     private String issuer;
+    @JsonFormat(pattern= "dd-MM-yyyy")
     private Date startDate;
+    @JsonFormat(pattern= "dd-MM-yyyy")
     private Date endDate;
     private CertificateStatus certificateStatus;
     private CertificateType type;
@@ -41,5 +41,21 @@ public class CertificateForRequestDTO {
         this.certificateStatus = request.getCertificate().getStatus();
         this.type = request.getCertificate().getType();
         this.email = request.getCertificate().getEmail();
+    }
+
+    @Override
+    public String toString() {
+        return "CertificateForRequestDTO{" +
+                "requestStatus=" + requestStatus +
+                ", rejectionReason='" + rejectionReason + '\'' +
+                ", serialNumber='" + serialNumber + '\'' +
+                ", signatureAlgorithm='" + signatureAlgorithm + '\'' +
+                ", issuer='" + issuer + '\'' +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", certificateStatus=" + certificateStatus +
+                ", type=" + type +
+                ", email='" + email + '\'' +
+                '}';
     }
 }

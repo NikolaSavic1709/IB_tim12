@@ -39,4 +39,15 @@ public class RegistrationDTO {
         this.telephoneNumber = endUser.getTelephoneNumber();
         this.email = endUser.getEmail();
     }
+
+    @Override
+    public String toString() {
+        return "RegistrationDTO{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", surname='" + surname + '\'' +
+                ", telephoneNumber='" + telephoneNumber + '\'' +
+                ", email='" + email + '\'' +
+                '}';
+    }
 }

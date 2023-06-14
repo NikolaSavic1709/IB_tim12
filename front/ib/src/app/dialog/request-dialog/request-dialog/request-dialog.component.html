@@ -1,0 +1,31 @@
+<h1 mat-dialog-title style="font-size: 20sp;">Certificate request</h1>
+<mat-dialog-content>
+    <form [formGroup]="certificateForm">
+        <mat-form-field style="width:250px">
+            <mat-label>Algorithm</mat-label>
+            <input matInput formControlName="algorithm" type="text" required>
+            <mat-error *ngIf="certificateForm.get('algorithm')?.invalid && (certificateForm.get('algorithm')?.dirty || certificateForm.get('algorithm')?.touched)">
+                Algorithm is required.
+            </mat-error>
+        </mat-form-field>
+        <mat-form-field style="width:250px">
+            <mat-label>Issuer</mat-label>
+            <input matInput formControlName="issuer" type="text" required>
+            <mat-error *ngIf="certificateForm.get('issuer')?.invalid && (certificateForm.get('issuer')?.dirty || certificateForm.get('issuer')?.touched)">
+                Issuer is required.
+            </mat-error>
+        </mat-form-field>
+      <mat-select style="width:240px; margin-left: 10px;" formControlName="certificateType"  placeholder="Type" required>
+        <mat-option *ngIf="admin" [value]="'ROOT'">Root</mat-option>
+        <mat-option [value]="'INTERMEDIATE'">Intermediate</mat-option>
+        <mat-option [value]="'END'">End</mat-option>
+      </mat-select>
+      <mat-error *ngIf="certificateForm.get('certificateType')?.invalid && (certificateForm.get('certificateType')?.dirty || certificateForm.get('certificateType')?.touched)">
+        Certificate Type is required.
+      </mat-error>
+    </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-button type="submit" [disabled]="!isFormValid()" (click)="sendRequest()">Submit</button>
+    <button mat-button (click)="closeDialog()">Close</button>
+</mat-dialog-actions>

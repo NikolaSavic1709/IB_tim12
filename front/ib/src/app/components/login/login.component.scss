@@ -1,0 +1,230 @@
+#background {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  
+  #container {
+      box-sizing: border-box;
+      position: absolute;
+      width: 600px;
+      height: 80%;
+      margin-top: 80px;
+      background: white;
+      border: 2px solid rgb(51, 51, 51);
+      box-shadow: 0 0 50px 5px rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+  
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  
+    font-weight: 400;
+    font-size: 16px;
+    color: rgb(51, 51, 51);
+  }
+  
+  h1 {
+    font-weight: 500;
+    font-size: 60px;
+    line-height: 82px;
+    letter-spacing: 0.1px;
+    margin-top: 80px;
+    /* margin-bottom: auto; */
+  }
+  
+  form {
+    margin: 40px;
+    margin-top: 20px;
+    width: 70%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  #email,
+  #password {
+    margin: 10px 0;
+  }
+  
+  #email input,
+  #password input {
+    /* height: 45px; */
+    color: black;
+  }
+  
+  // //input outline color
+  // ::ng-deep .mat-form-field-appearance-outline.ng-valid div {
+  //   border-color: white !important;
+  // }
+  
+  // //input outline color
+  // ::ng-deep .mat-form-field-appearance-outline.ng-pristine div {
+  //   border-color: white !important;
+  // }
+  
+  // //change color of label
+  // ::ng-deep .mat-form-field-appearance-outline.ng-valid mat-label {
+  //   color: white !important;
+  // }
+  
+  // //change color of label
+  // ::ng-deep .mat-form-field-appearance-outline.ng-pristine mat-label {
+  //   color: white !important;
+  // }
+  
+  // //change color of input
+  // ::ng-deep .mat-form-field-appearance-outline input {
+  //   color: white !important;
+  // }
+  
+  // //change color of placeholder
+  // ::ng-deep .mat-form-field-appearance-outline input::placeholder {
+  //   color: gray !important;
+  // }
+  
+  .input-error {
+    font-size: 0.8rem;
+  }
+  
+  .login-error {
+    color: rgb(255, 103, 103);
+    font-size: 0.8rem;
+    position: relative;
+    top: 0.5rem;
+  }
+  
+  
+  #keepLogin {
+    align-self: flex-start;
+    margin: 5px 0 20px 0;
+  }
+
+  #radio{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: start;
+    margin-bottom: 20px;
+    margin-top: -10px;
+  }
+
+  #radio p{
+    font-weight: 500;
+    margin-bottom: 0;
+    margin-left: 10px;
+  }
+
+  
+  // //checkbox text color change
+  // ::ng-deep #keepLogin .mdc-checkbox__background {
+  //   border-color: white !important;
+  // }
+  
+  // //checkbox text color change
+  // ::ng-deep #keepLogin label {
+  //   color: white !important;
+  // }
+  
+  .mat-form-field-appearance-outline.mat-form-field-invalid.ng-touched {
+    color: rgb(255, 103, 103);
+  }
+  
+  :host ::ng-deep .mat-form-field-appearance-outline .mdc-text-field--outlined {
+    border-color: white !important;
+  }
+  
+  
+  #loginbtn {
+    transition: all .5s ease;
+    background: #1a1a1a;
+    box-shadow: 0px 4px 4px rgba(100, 100, 100, 0.397);
+
+    height: 45px;
+  
+    align-items: center;
+    text-align: center;
+    letter-spacing: 0.3px;
+    font-weight: 800;
+    font-size: 16px;
+    color: #e2e2e2;
+  }
+  
+  #loginbtn:hover {
+    transform: translateY(-0.25em);
+    background: #c5c5c5;
+    border: 3px solid black;
+    box-shadow: 0px 4px 4px rgba(15, 15, 15, 0.397);
+    color: #1a1a1a;
+  }
+  
+  #forgotPass {
+    margin: 20px 0;
+    font-weight: 700;
+    font-size: 14px;
+    align-items: center;
+    text-align: center;
+    letter-spacing: 1px;
+    margin: 30px;
+    cursor: pointer;
+  }
+  
+  #separator {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  
+  #separator hr {
+    display: inline;
+    width: 30%;
+  }
+  
+  #difLogin {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 3% 30% 3% 30%;
+   // border: 1px solid black;
+   // cursor: pointer;
+  }
+
+  #difLogin p{
+    font-weight: 1000;
+  }
+  
+  #difLogin .sn-icon {
+    color: #020202;
+    font-size: 40px;
+   
+    margin-right: 5%;
+  }
+
+  #difLogin .gg-icon {
+    // color: #020202;
+    // font-size: 40px;
+   
+    margin-right: 5%;
+  }
+  
+  #toSignup {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+  
+  #toSignup #signup {
+    font-weight: bold;
+    cursor: pointer;
+    margin: 0 5px;
+  }

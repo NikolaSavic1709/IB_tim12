@@ -15,4 +15,12 @@ public class ObjectListResponseDTO<T> {
 
     private Integer totalCount;
     private List<T> results;
+
+    @Override
+    public String toString() {
+        return "ObjectListResponseDTO{" +
+                "totalCount=" + totalCount +
+                ", results=" + results +
+                '}';
+    }
 }

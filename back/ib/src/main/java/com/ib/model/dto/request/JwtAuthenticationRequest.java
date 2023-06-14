@@ -1,41 +1,42 @@
 package com.ib.model.dto.request;
 
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.validator.constraints.Length;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 // DTO za login
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class JwtAuthenticationRequest {
     @NotNull
     @NotEmpty
     @NotBlank
+    @Email(regexp = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
     private String email;
 
     @NotNull
     @NotEmpty
     @NotBlank
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[A-Z])(?=.*[@#$%^&+=_!]).{8,}$")
     private String password;
 
-    public JwtAuthenticationRequest() {
-        super();
-    }
+    @NotNull
+    @NotEmpty
+    @NotBlank
+    private String mfaType;
 
-    public JwtAuthenticationRequest(String email, String password) {
-        this.setEmail(email);
-        this.setPassword(password);
-    }
-
-    public String getEmail() {
-        return this.email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return this.password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
+    @Override
+    public String toString() {
+        return "JwtAuthenticationRequest{" +
+                "email='" + email + '\'' +
+                ", password='" + new BCryptPasswordEncoder().encode(password) + '\'' +
+                ", mfaType='" + mfaType + '\'' +
+                '}';
     }
 }

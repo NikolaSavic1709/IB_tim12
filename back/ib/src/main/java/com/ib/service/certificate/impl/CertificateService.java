@@ -11,18 +11,15 @@ import com.ib.service.CertificateFileStorage;
 import com.ib.service.base.impl.JPAService;
 import com.ib.service.certificate.interfaces.ICertificateService;
 import com.ib.service.users.impl.UserService;
+import com.ib.utils.TokenUtils;
 import jakarta.persistence.EntityNotFoundException;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.CertificateException;
@@ -31,8 +28,11 @@ import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -45,14 +45,19 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 @Service
 public class CertificateService extends JPAService<Certificate> implements ICertificateService {
 
-    @Autowired
-    private ICertificateRepository certificateRepository;
+    private final ICertificateRepository certificateRepository;
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @Autowired
-    private CertificateFileStorage certificateFileStorage;
+    private final CertificateFileStorage certificateFileStorage;
+    private final TokenUtils tokenUtils;
+
+    public CertificateService(ICertificateRepository certificateRepository, UserService userService, CertificateFileStorage certificateFileStorage, TokenUtils tokenUtils) {
+        this.certificateRepository = certificateRepository;
+        this.userService = userService;
+        this.certificateFileStorage = certificateFileStorage;
+        this.tokenUtils = tokenUtils;
+    }
 
     @Override
     protected JpaRepository<Certificate, Integer> getEntityRepository() {
@@ -64,45 +69,6 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         Optional<Certificate> certificate= Optional.ofNullable(certificateRepository.findBySerialNumber(serialNumber));
         if(certificate.isEmpty()) throw new EntityNotFoundException();
         else return certificate.get();
-    }
-    @Override
-    public boolean getAndCheck(String serialNumber) throws EntityNotFoundException{
-        Optional<Certificate> certificate= Optional.ofNullable(certificateRepository.findBySerialNumber(serialNumber));
-        if(certificate.isEmpty()) throw new EntityNotFoundException();
-        return isValid(certificate.get());
-    }
-    private boolean isValid(Certificate certificate){
-        if(!isDigitalSignatureValid(certificate) || !isTrustedAuthority(certificate) || isCertificateRevoked(certificate) || isCertificateOutdated(certificate)) {
-            return false;
-        }
-        certificate.setStatus(CertificateStatus.VALID);
-        return true;
-    }
-    private boolean isDigitalSignatureValid(Certificate certificate){
-        try {
-            if (certificate.getIssuer()==null) return true;
-            X509Certificate cert=certificateFileStorage.getCertificateFromStorage(certificate.getSerialNumber());
-            X509Certificate issuerCert=certificateFileStorage.getCertificateFromStorage(certificate.getIssuer());
-
-            cert.verify(issuerCert.getPublicKey());
-            return true;
-        } catch (InvalidKeyException | CertificateException | NoSuchAlgorithmException | SignatureException | NoSuchProviderException e) {
-            return false;
-        }
-    }
-    private boolean isTrustedAuthority(Certificate certificate){
-        if(certificate.getType().equals(CertificateType.ROOT) || isValid(certificateRepository.findBySerialNumber(certificate.getIssuer())))
-            return true;
-        return false;
-
-    }
-    private boolean isCertificateRevoked(Certificate certificate){
-        // ova metoda se ne mora koristiti ako ce svaki put kada se povuce ili ponovo objavi sertifikat promeni fleg u bazi
-        return certificate.getStatus()==CertificateStatus.INVALID;
-    }
-    private boolean isCertificateOutdated(Certificate certificate){
-        LocalDateTime now = LocalDateTime.now();
-        return certificate.getStartDate().after(Date.from(now.atZone(ZoneId.systemDefault()).toInstant())) || certificate.getEndDate().before(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()));
     }
 
     public X509Certificate generateCertificate(Certificate certificateRequest) throws ForbiddenException{
@@ -163,12 +129,18 @@ public class CertificateService extends JPAService<Certificate> implements ICert
 
             certificateFileStorage.exportCertificate(cert);
             certificateFileStorage.exportPrivateKey(keyPairSubject.getPrivate(), sn);
-
+            //addToKeystore("testKeystore.p12","password","testAlias",sn);
             return cert;
         } catch (IllegalArgumentException | IllegalStateException | OperatorCreationException | CertificateException e) {
             e.printStackTrace();
         } catch (IOException e) {
             throw new RuntimeException(e);
+//        } catch (KeyStoreException e) {
+//            System.out.println("mrs");
+//            throw new RuntimeException(e);
+//        } catch (NoSuchAlgorithmException e) {
+//            System.out.println("mrsssss");
+//            throw new RuntimeException(e);
         }
         return null;
     }
@@ -194,17 +166,55 @@ public class CertificateService extends JPAService<Certificate> implements ICert
                 requestCreation.getIssuer(),
                 CertificateStatus.INVALID,
                 requestCreation.getType(),
-                requestCreation.getEmail()
+                requestCreation.getEmail(),
+                "",
+                false
         );
         return save(certificateMetaData);
+    }
+
+    @Override
+    public byte[] getCertificatesInZip(String serialNumber, String authHeader)  throws EntityNotFoundException{
+        Certificate certificate=getBySerialNumber(serialNumber);
+        String token = authHeader.substring(7);
+        File certFile = new File("src/main/resources/certificates/"+serialNumber+".crt");
+        File keyFile = new File("src/main/resources/certificates/"+serialNumber+".key");
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
+            addToZip(certFile, zipOutputStream, "certificate.crt");
+            if (Objects.equals(tokenUtils.getEmailFromToken(token), certificate.getEmail()))
+                addToZip(keyFile, zipOutputStream, "certificate.key");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    private void addToZip(File file, ZipOutputStream zipOutputStream, String fileName) throws IOException {
+        ZipEntry zipEntry = new ZipEntry(fileName);
+        zipEntry.setSize(file.length());
+        zipOutputStream.putNextEntry(zipEntry);
+
+        FileInputStream fileInputStream = new FileInputStream(file);
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+            zipOutputStream.write(buffer, 0, bytesRead);
+        }
+
+        fileInputStream.close();
+        zipOutputStream.closeEntry();
     }
 
     private static KeyPair generateKeyPair() {
         try {
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-            SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+            SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN"); //server.ssl.key-store-password key
             keyGen.initialize(1024, random);
-            return keyGen.generateKeyPair();
+            KeyPair keyPair=keyGen.generateKeyPair();
+            return keyPair;
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
         }
@@ -233,5 +243,30 @@ public class CertificateService extends JPAService<Certificate> implements ICert
         Certificate cert = certificateRepository.findBySerialNumber(serialNumber);
         return cert.getEmail();
     }
+    public void addToKeystore(String keystorePath, String keystorePassword, String alias, String serialNumber) throws KeyStoreException,
+            NoSuchAlgorithmException, CertificateException, IOException {
 
+        KeyStore keystore = KeyStore.getInstance("PKCS12");
+        char[] password = keystorePassword.toCharArray();
+        keystore.load(null, password);
+
+        // Load the certificate
+        X509Certificate certificate=certificateFileStorage.getCertificateFromStorage(serialNumber);
+
+        // Load the private key
+        PrivateKey privateKey=certificateFileStorage.getPrivateKeyFromStorage(serialNumber);
+
+        // Create a keystore entry with the certificate and private key
+        KeyStore.PrivateKeyEntry privateKeyEntry = new KeyStore.PrivateKeyEntry(privateKey,
+                new java.security.cert.Certificate[]{certificate});
+        KeyStore.ProtectionParameter passwordProtection = new KeyStore.PasswordProtection(password);
+        keystore.setEntry(alias, privateKeyEntry, passwordProtection);
+
+        // Save the keystore to a file
+        FileOutputStream keystoreOutputStream = new FileOutputStream(keystorePath);
+        keystore.store(keystoreOutputStream, password);
+
+        // Close all the streams
+        keystoreOutputStream.close();
+    }
 }

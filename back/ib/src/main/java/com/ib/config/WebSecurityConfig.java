@@ -3,6 +3,8 @@ package com.ib.config;
 import com.ib.authentication.RestAuthenticationEntryPoint;
 import com.ib.authentication.TokenAuthenticationFilter;
 import com.ib.service.users.impl.UserService;
+import com.ib.service.validation.impl.RecaptchaService;
+import com.ib.service.validation.interfaces.IRecaptchaService;
 import com.ib.utils.TokenUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +18,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 
@@ -48,6 +51,9 @@ public class WebSecurityConfig {
     private RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
 
+    @Autowired
+    private IRecaptchaService recaptchaService;
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
@@ -65,19 +71,29 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests()
                 .requestMatchers("/api/login").permitAll()
                 .requestMatchers("/api/register").permitAll()
+                .requestMatchers("/api/activate").permitAll()
+                .requestMatchers("/api/loginMFA").permitAll()
+                .requestMatchers("/api/forgotPassword").permitAll()
+                .requestMatchers("/api/resetPassword").permitAll()
+                .requestMatchers("/api/renewPassword").permitAll()
+                .requestMatchers("/api/google/login").permitAll()
+
 //        http.authorizeHttpRequests().requestMatchers("/**").permitAll()
                 // za svaki drugi zahtev korisnik mora biti autentifikovan
                 .anyRequest().authenticated().and()
                 // za development svrhe ukljuci konfiguraciju za CORS iz WebConfig klase
                 .cors().and()
 
+                .addFilterBefore(new RecaptchaFilter(recaptchaService), UsernamePasswordAuthenticationFilter.class)
                 // umetni custom filter TokenAuthenticationFilter kako bi se vrsila provera JWT tokena umesto cistih korisnickog imena i lozinke (koje radi BasicAuthenticationFilter)
                 .addFilterBefore(new TokenAuthenticationFilter(tokenUtils,  userDetailsService()), BasicAuthenticationFilter.class);
 
         // zbog jednostavnosti primera ne koristimo Anti-CSRF token (https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
         http.csrf().disable();
         http.headers().frameOptions().disable();
-
+        http
+                .requiresChannel(channel ->
+                        channel.anyRequest().requiresSecure());
         // ulancavanje autentifikacije
         http.authenticationProvider(authenticationProvider());
         return http.build();

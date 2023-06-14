@@ -1,12 +1,12 @@
 package com.ib.model.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ib.model.users.EndUser;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Getter
 @Setter
@@ -35,9 +35,12 @@ public class RegistrationRequest {
     @NotNull
     @NotEmpty
     @NotBlank
-    @Pattern(regexp = "^(?=.*\\d)(?=.*[A-Z])(?!.*[^a-zA-Z0-9@#$^+=])(.{8,15})$")
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[A-Z])(?=.*[@#$%^&+=_!]).{8,}$")
     private String password;
-
+    @NotNull
+    @NotEmpty
+    @NotBlank
+    private String userActivationType;
 
     public RegistrationRequest(EndUser endUser) {
         this.id = endUser.getId();
@@ -48,4 +51,16 @@ public class RegistrationRequest {
         this.password = endUser.getPassword();
     }
 
+
+    @Override
+    public String toString() {
+        return "RegistrationRequest{" +
+                "name='" + name + '\'' +
+                ", surname='" + surname + '\'' +
+                ", telephoneNumber='" + telephoneNumber + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + new BCryptPasswordEncoder().encode(password) + '\'' +
+                ", userActivationType='" + userActivationType + '\'' +
+                '}';
+    }
 }

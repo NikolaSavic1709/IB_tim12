@@ -1,6 +1,7 @@
 package com.ib.model.users;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,21 +21,30 @@ public class UserActivation {
     private Integer id;
 
     @OneToOne
-    private User user;
+    @NotNull
+    private EndUser user;
 
     @Column(name = "token", nullable = false)
-    private String token;
+    @NotNull
+    private Integer token;
+
+    @Column(name = "token_remain_attempts", nullable = false)
+    @NotNull
+    private Integer tokenRemainAttempts;
 
     @Column(name = "creation_date", nullable = false)
+    @NotNull
     private LocalDateTime creationDate;
 
     @Column(name = "expiry_date", nullable = false)
+    @NotNull
     private LocalDateTime expiryDate;
 
-    public UserActivation(User user, LocalDateTime creationDate, LocalDateTime expiryDate, String token) {
+    public UserActivation(EndUser user, LocalDateTime creationDate, LocalDateTime expiryDate, Integer token, Integer tokenRemainAttempts) {
         this.user = user;
         this.creationDate = creationDate;
         this.expiryDate = expiryDate;
         this.token = token;
+        this.tokenRemainAttempts = tokenRemainAttempts;
     }
 }

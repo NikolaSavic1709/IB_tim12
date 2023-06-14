@@ -1,0 +1,82 @@
+<div id="background">
+  <div id="container">
+
+    <h1>Login</h1>
+
+    <form [formGroup]="loginForm" (ngSubmit)="login()">
+
+      <mat-form-field appearance="outline" id="email">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" placeholder="name@example.com" name="email" formControlName="email" required>
+        <mat-error *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+          <span *ngIf="loginForm.get('email')?.errors?.['email']" class="input-error">Email must be in correct
+            format</span>
+          <span *ngIf="loginForm.get('email')?.errors?.['required']" class="input-error">Email is required</span>
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" id="password">
+        <mat-label>Password</mat-label>
+        <input matInput [type]="hide ? 'password' : 'text'" name="password" formControlName="password">
+        <button mat-icon-button matSuffix (click)="hide = !hide" [attr.aria-label]="'Hide password'"
+          [attr.aria-pressed]="hide">
+          <mat-icon>{{hide ? 'visibility_off' : 'visibility'}}</mat-icon>
+        </button>
+        <mat-error *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+          <span *ngIf="loginForm.get('password')?.errors?.['minlength']" class="input-error">Password must contain
+            atleast 6 characters</span>
+          <span *ngIf="loginForm.get('password')?.errors?.['required']" class="input-error">Password is required</span>
+        </mat-error>
+      </mat-form-field>
+
+
+
+      <div id="radio">
+        <p> Two-Factor Authentication</p>
+        <mat-radio-group aria-label="Select an option" formControlName="twoFactor" required>
+          <mat-radio-button value="email">Email</mat-radio-button>
+          <mat-radio-button value="sms">Phone number</mat-radio-button>
+        </mat-radio-group>
+      </div>
+
+      <!-- <p id="keepLogin">
+            <mat-checkbox formControlName="keepLogin" id="keepLogin-label">Keep me logged in</mat-checkbox>
+          </p> -->
+
+      <!-- <re-captcha formControlName="recaptcha" (resolved)="addTokenLog('Reactive form mode resolved', $event)">
+      </re-captcha> -->
+
+      <button [disabled]="!loginForm.valid" type="submit" id="loginbtn">LOGIN</button>
+
+      <mat-error *ngIf="hasError">
+        <span class="login-error">{{error}}</span>
+      </mat-error>
+
+      <p id="forgotPass" (click)="toForgot()">Forgot password</p>
+
+      <div id="separator">
+        <hr>
+        <span>or login with</span>
+        <hr>
+      </div>
+
+      <div id="difLogin">
+        <asl-google-signin-button type='icon' size='large' class="gg-icon">
+        </asl-google-signin-button>
+        <p>Google</p>
+      </div>
+     
+
+      <!-- <div id="difLogin" (click)="toGoogleOAuth()">
+        <i class="fa fa-google sn-icon" aria-hidden="true"></i>
+        <p>OAUTH</p>
+      </div> -->
+
+      <div id="toSignup">
+        <p>Don't have an account?</p>
+        <p id="signup" (click)="toSignup()">Sign up</p>
+      </div>
+    </form>
+
+  </div>
+</div>
