@@ -70,10 +70,6 @@ public class AuthenticationController {
         if(!endUserService.checkUserEnabled(authenticationRequest.getEmail())){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid login");
         }
-        User user = userService.findByEmail(authenticationRequest.getEmail());
-        if (user.getLastPasswordResetDate().isBefore(LocalDateTime.now().minusMinutes(5))) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Password expired");
-        }
 
         String mfaType = authenticationRequest.getMfaType();
         if (!mfaType.equals("email") && !mfaType.equals("sms")) {
@@ -83,6 +79,11 @@ public class AuthenticationController {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 authenticationRequest.getEmail(), authenticationRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        User user = userService.findByEmail(authenticationRequest.getEmail());
+        if (user.getLastPasswordResetDate().isBefore(LocalDateTime.now().minusMinutes(60))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Password expired");
+        }
 
         try {
             endUserService.sendMFAToken(authenticationRequest.getEmail(), authenticationRequest.getMfaType());

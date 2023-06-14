@@ -65,6 +65,11 @@ export class RenewPasswordComponent {
     
                 if (errorCode === 400) {
                     this.hasError = true;
+                    this.snackBar.open('Cannot use previous password', 'Close', {
+                      duration: 3000,
+                      verticalPosition: 'bottom',
+                      horizontalPosition: 'center',
+                    });
                 } else {
                   this.snackBar.open('E-mail or password incorrect', 'Close', {
                     duration: 3000,
