@@ -307,6 +307,7 @@ public class EndUserService {
     private void updatePassword(User user, String newPassword) {
         user.setPassword(bCryptPasswordEncoder.encode(newPassword));
         user.setLastPasswordResetDate(LocalDateTime.now());
+        user.setLastMfaDate(LocalDateTime.now());
         user.addPassword(bCryptPasswordEncoder.encode(newPassword));
         userRepository.save(user);
 

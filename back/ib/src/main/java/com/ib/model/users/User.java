@@ -84,10 +84,14 @@ public class User implements UserDetails {
     @Column(name = "last_password_reset_date")
     private LocalDateTime lastPasswordResetDate;
 
+    @Column(name = "last_mfa_date")
+    private LocalDateTime lastMfaDate;
+
     @Column(name= "previous_passwords")
     @ElementCollection
     @CollectionTable(name = "password", joinColumns = @JoinColumn(name = "user_id"))
     private List<String> passwordHistory;
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

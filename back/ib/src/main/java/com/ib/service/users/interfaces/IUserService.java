@@ -10,4 +10,6 @@ public interface IUserService {
     User get(Integer id);
 
     User update(Integer id, UserUpdateDTO userUpdateDTO) throws InvalidUserException;
+
+    User save(User user);
 }

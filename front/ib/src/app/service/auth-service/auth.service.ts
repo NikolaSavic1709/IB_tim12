@@ -42,18 +42,20 @@ export class AuthService {
       skip: 'true', recaptcha:token
     });
     return this.http.post(environment.apiHost + 'login', auth, {
-      headers: recaptchaHeaders, responseType: 'text'
+      headers: recaptchaHeaders
     });
   }
 
   loginUserObs(login:LoginRequest, token:string):any{
     this.login(login, token).subscribe({
       next: (result) => {
-        this.email = login.email;
-        this.password = login.password;
-        this.router.navigate(['/two-factor-auth']);
-        this.hasError.next(false);
-        this.error.next('');
+        
+        
+            localStorage.setItem('user', JSON.stringify(result.accessToken));
+            this.setUser();
+            this.router.navigate(['/certificates']);
+        
+        
       },
       error: (error) => {
         if (error instanceof HttpErrorResponse) {
@@ -62,7 +64,15 @@ export class AuthService {
           if (errorCode === 403) {
             localStorage.setItem('expiredPassword', 'true');
             this.router.navigate(['/renew-password'])
-          } else {
+
+          } else if(errorCode==404){
+            this.email = login.email;
+            this.password = login.password;
+            
+            this.router.navigate(['/two-factor-auth']);
+            this.hasError.next(false);
+            this.error.next('');
+          }else {
             this.hasError.next(true);
             this.error.next('Wrong username or password!');
           }
