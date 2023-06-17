@@ -51,4 +51,8 @@ public class UserService implements IUserService, UserDetailsService {
         user.setTelephoneNumber(userUpdateDTO.getTelephoneNumber());
         return userRepository.save(user);
     }
+    @Override
+    public User save(User user){
+        return userRepository.save(user);
+    }
 }

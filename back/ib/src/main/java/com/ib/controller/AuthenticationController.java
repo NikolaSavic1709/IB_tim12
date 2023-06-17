@@ -1,9 +1,5 @@
 package com.ib.controller;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
 import com.ib.DTO.*;
 import com.ib.exception.*;
 import com.ib.model.dto.JWTToken;
@@ -22,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -35,11 +30,9 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import static com.ib.utils.LogIdGenerator.setLogId;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
-import java.util.Collections;
+
+import static com.ib.utils.LogIdGenerator.setLogId;
 
 
 //Kontroler zaduzen za autentifikaciju korisnika
@@ -87,8 +80,10 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("MFA is only possible via email or SMS");
         }
 
+        Authentication authentication;
         try {
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+            endUserService.setStandardAuth(authenticationRequest.getEmail());
+            authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                     authenticationRequest.getEmail(), authenticationRequest.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
@@ -100,15 +95,27 @@ public class AuthenticationController {
 
 
         User user = userService.findByEmail(authenticationRequest.getEmail());
-        if (user.getLastPasswordResetDate().isBefore(LocalDateTime.now().minusMinutes(60))) {
+        if (user.getLastPasswordResetDate().isBefore(LocalDateTime.now().minusMinutes(1))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Password expired");
         }
 
         try {
-            endUserService.sendMFAToken(authenticationRequest.getEmail(), authenticationRequest.getMfaType());
-            setLogId();
-            logger.info("Successfully request /api/login: Returned status OK");
-            return new ResponseEntity<>("MFA code sent to your resource", HttpStatus.OK);
+            if(user.getLastMfaDate()==null || user.getLastMfaDate().isBefore(LocalDateTime.now().minusDays(7))) {
+                endUserService.sendMFAToken(authenticationRequest.getEmail(), authenticationRequest.getMfaType());
+                user.setLastMfaDate(LocalDateTime.now());
+                userService.save(user);
+                setLogId();
+                logger.info("Successfully request /api/login: Returned status OK, proceed to MFA");
+                return new ResponseEntity<>("MFA code sent to your resource", HttpStatus.NOT_FOUND);
+            }
+            else {
+                user = (User) authentication.getPrincipal();
+                String jwt = tokenUtils.generateToken(user);
+                int expiresIn = tokenUtils.getExpiredIn();
+                setLogId();
+                logger.info("Successfully request /api/loginMFA: Returned status OK, without MFA");
+                return ResponseEntity.ok(new JWTToken(jwt, expiresIn));
+            }
         } catch (MailSendingException e) {
             setLogId();
             logger.error("Returned status BAD_REQUEST: Error while sending mail, possible inactive email address");
